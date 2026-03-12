@@ -31,178 +31,505 @@ Always aim to:
 </role>
 
 <design-system>
-# Design Philosophy
+# Design Style: Material You (Material Design 3)
 
-The Hand-Drawn design style celebrates authentic imperfection and human touch in a digital world. It rejects the clinical precision of modern UI design in favor of organic, playful irregularity that evokes sketches on paper, sticky notes on a wall, and napkin diagrams from a brainstorming session.
+## Design Philosophy
 
-**Core Principles:**
-- **No Straight Lines**: Every border, shape, and container uses irregular border-radius values to create wobbly, hand-drawn edges that reject geometric perfection
-- **Authentic Texture**: The design layer paper grain, dot patterns, and subtle background textures to simulate physical media (notebook paper, post-its, sketch pads)
-- **Playful Rotation**: Elements are deliberately tilted using small rotation transforms (-2deg to 2deg) to break rigid grid alignment and create casual energy
-- **Hard Offset Shadows**: Reject soft blur shadows entirely. Use solid, offset box-shadows (4px 4px 0px) to create a cut-paper, layered collage aesthetic
-- **Handwritten Typography**: Use exclusively handwritten or marker-style fonts (Kalam, Patrick Hand) that feel human and approachable, never corporate or sterile
-- **Scribbled Decoration**: Add visual flourishes like dashed lines, hand-drawn arrows, tape effects, thumbtacks, and irregular shapes to reinforce the sketched aesthetic
-- **Limited Color Palette**: Stick to pencil blacks, paper whites, correction marker red, and post-it yellow for bold but cohesive simplicity
-- **Intentional Messiness**: Embrace overlap, asymmetry, and visual "mistakes" that make the design feel spontaneous and creative rather than manufactured
+**Core Principles**: Personal, adaptive, and spirited. Material You (MD3) represents a shift from Material Design 2's rigid "paper and ink" metaphor to a more organic, expressive system. The design extracts color palettes from seed colors (simulating the wallpaper-based personalization), emphasizes tonal surfaces over stark whites, and uses organic shapes with soft curves.
 
-**Emotional Intent:**
-This style should feel approachable, creative, human-centered, and fun. It lowers barriers and invites interaction by appearing unfinished and work-in-progress, making users feel like collaborators rather than consumers. Perfect for creative tools, brainstorming platforms, educational content, or any product that wants to emphasize human creativity over corporate polish.
+**Vibe**: Friendly, soft, rounded, colorful, and personal. The aesthetic feels modern yet approachable, with generous use of color through tonal surfaces rather than just accent highlights. Movement is smooth and confident, never jarring. Every interaction feels tactile and responsive, with micro-animations that provide satisfying feedback.
 
-# Design Token System
+**Enhanced Implementation Details**:
+This implementation goes beyond the baseline Material Design 3 specifications by incorporating:
+- **Layered depth**: Multiple blur shapes, radial gradients, and shadow combinations create atmospheric backgrounds
+- **Rich micro-interactions**: Hover states include scale transforms, shadow elevations, glow effects, and smooth color transitions
+- **Asymmetric elevation**: Featured cards (like pricing tiers) use vertical translation to create visual hierarchy
+- **Progressive disclosure**: Elements reveal depth on interaction through shadow transitions and background opacity changes
+- **Tactile feedback**: All interactive elements include active:scale-95 for press feedback, enhancing the physical feel
 
-## Colors (Single Palette - Light Mode)
-- **Background**: `#fdfbf7` (Warm Paper)
-- **Foreground**: `#2d2d2d` (Soft Pencil Black - never pure black)
-- **Muted**: `#e5e0d8` (Old Paper / Erased Pencil)
-- **Accent**: `#ff4d4d` (Red Correction Marker)
-- **Border**: `#2d2d2d` (Pencil Lead)
-- **Secondary Accent**: `#2d5da1` (Blue Ballpoint Pen)
+**Key Differentiators from MD2**:
+- Tonal surface system replaces pure white backgrounds
+- Pill-shaped buttons replace rounded rectangles
+- Organic shapes and blur effects replace flat geometric patterns
+- State layers (opacity overlays) replace solid color changes
+- Multi-layered atmospheric effects create rich visual depth
+- Micro-interactions on every interactive element enhance perceived quality
 
-## Typography
-- **Headings**: `Kalam` (wght 700) - Looks like a thick felt-tip marker.
-- **Body**: `Patrick Hand` (wght 400) - Legible but distinctly handwritten.
-- **Scale**: Large and readable. Headings should vary in size dramatically to look like emphasized notes.
+## Design Token System (The DNA)
 
-## Radius & Border
-- **Wobbly Borders**: CRITICAL. Do NOT use standard `rounded-*` classes alone.
-- **Technique**: Use inline `style={{ borderRadius: ... }}` with multiple values to create irregular organic ellipses.
-  - Example: `border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;`
-  - Store reusable radius values in config as `wobbly` and `wobblyMd`
-- **Border Width**: Thick and variable. `border-2` is the minimum. Use `border-[3px]` or `border-4` for emphasis.
-- **Style**: `border-solid` is default for most elements. Use `border-dashed` for secondary elements, dividers, and sketchy overlays.
+### Colors (Light Mode)
 
-## Shadows/Effects
-- **Hard Offset Shadows**: No blur. Just a solid offset to create a cut-paper, layered collage aesthetic.
-  - Standard: `box-shadow: 4px 4px 0px 0px #2d2d2d;`
-  - Emphasized: `box-shadow: 8px 8px 0px 0px #2d2d2d;`
-  - Hover State: Reduce offset `2px 2px` or `6px 6px` to create "lifting" effect
-- **Paper Texture**: Use `radial-gradient` dot pattern on body background to simulate notebook paper grain
-  - `backgroundImage: radial-gradient(#e5e0d8 1px, transparent 1px)`
-  - `backgroundSize: 24px 24px`
-- **Subtle Animations**: Gentle bounce (3s duration) for decorative elements, rotation on hover for playful interaction
+Material You uses a sophisticated tonal palette derived from a seed color. For this implementation, use a **Purple/Violet seed** (#6750A4).
 
-# Component Stylings
+**Core Palette Structure**:
+- **Background (Surface)**: `#FFFBFE` - Slightly warm off-white, not pure white
+- **Foreground (On Surface)**: `#1C1B1F` - Near-black with slight warmth
+- **Primary**: `#6750A4` - Rich purple (seed color)
+- **On Primary**: `#FFFFFF` - Pure white for text on primary
+- **Secondary Container**: `#E8DEF8` - Light lavender tint
+- **On Secondary Container**: `#1D192B` - Dark text for secondary surfaces
+- **Tertiary**: `#7D5260` - Complementary mauve/dusty rose
+- **Surface Container**: `#F3EDF7` - Subtle tinted surface, one step darker than background
+- **Surface Container Low (Muted)**: `#E7E0EC` - For inputs and recessed surfaces
+- **Outline (Border)**: `#79747E` - Medium gray for borders
+- **On Surface Variant**: `#49454F` - For secondary text and icons
 
-## Buttons
-- **Shape**: Irregular wobbly oval using custom border-radius from config
-- **Normal State**:
-  - White background, `border-[3px]` black border, black text
-  - Hard offset shadow: `shadow-[4px_4px_0px_0px_#2d2d2d]`
-  - Font: Patrick Hand (body font)
-- **Hover State**:
-  - Background fills with Accent red `#ff4d4d`, text turns white
-  - Shadow reduces to `shadow-[2px_2px_0px_0px_#2d2d2d]`
-  - Subtle translate: `translate-x-[2px] translate-y-[2px]`
-- **Active State**:
-  - Shadow disappears completely (button "presses flat")
-  - Translate increases: `translate-x-[4px] translate-y-[4px]`
-- **Secondary Variant**: Uses muted background `#e5e0d8`, hovers to blue `#2d5da1`
+**Color Relationship Rules**:
+- Use surface tones to create depth hierarchy: Background → Surface Container → Surface Container Low
+- Primary color should appear in CTAs, focus states, and key interactive elements
+- Secondary Container is for pills, chips, and less prominent containers
+- Tertiary is for accent elements and FABs (Floating Action Buttons)
+- Never use pure white (#FFFFFF) for backgrounds - always use the tinted Surface color
+- On colored backgrounds (primary/tertiary), use transparent white/black overlays for states
 
-## Cards/Containers
-- **Base Style**: White background (`#ffffff`) with wobbly black border (`border-2`)
-- **Border Radius**: Use `wobblyMd` radius from config for medium containers
-- **Shadow**: Subtle `3px 3px 0px 0px rgba(45, 45, 45, 0.1)` for depth
-- **Decoration Options**:
-  - `decoration="tape"`: Translucent gray bar positioned at top center with slight rotation
-  - `decoration="tack"`: Red circular thumbtack at top center
-  - No decoration for minimal aesthetic
-- **Special Treatments**:
-  - Post-it yellow background `#fff9c4` for feature cards
-  - Speech bubble style for testimonials with geometric tail using border-based triangle
-  - Sticky-note tags for section labels
+**Opacity Patterns for State Layers**:
+- Hover on solid colors: 90% of base color (`bg-md-primary/90`)
+- Active/pressed on solid colors: 80% of base color (`bg-md-primary/80`)
+- Hover on transparent surfaces: 10% of primary (`bg-md-primary/10`)
+- Focus on transparent surfaces: 5% of primary (`bg-md-primary/5`)
+- Subtle overlay effects: 20% opacity with backdrop-blur
 
-## Inputs
-- **Style**: Full box with wobbly borders (not just underline)
-- **Border**: `border-2` with wobbly radius matching button aesthetic
-- **Font**: Patrick Hand (body font) for authentic hand-written feel
-- **Background**: White with placeholder text in muted color `#2d2d2d/40`
-- **Focus State**:
-  - Border changes to blue `#2d5da1`
-  - Ring effect: `ring-2 ring-[#2d5da1]/20`
-  - No standard outline, maintains wobbly aesthetic
+### Typography
 
-# Layout Strategy
-- **Grid System**: Use Tailwind's responsive grid (`md:grid-cols-2`, `md:grid-cols-3`) but add visual irregularity
-- **Rotation**: Apply small rotations (`rotate-1`, `-rotate-2`) to cards, images, and decorative elements
-- **Breaking Alignment**:
-  - Stats: Organic shapes with varied border-radius instead of perfect circles
-  - Cards: Slight rotation on hover (`hover:rotate-1` or `hover:-rotate-1`)
-  - Pricing: Scale up highlighted card slightly on desktop (`md:scale-105`)
-- **Overlap & Layering**:
-  - Overlapping avatar circles with negative margin (`-space-x-4`)
-  - Decorative elements positioned absolutely outside parent bounds
-  - Speech bubble tails extending beyond card borders
-- **Whitespace**:
-  - Consistent section padding (`py-20`) for rhythm
-  - Generous gap in grids (`gap-8`) to prevent crowding
-  - Max-width containers (`max-w-5xl`, `max-w-3xl`) for focused content
-- **Z-Index Layering**: Decorative SVG backgrounds at low z-index, step numbers elevated with `z-10`
+**Font Family**: **Roboto** (Google Fonts) - The canonical Material Design typeface
+- Load weights: 400 (Regular), 500 (Medium), 700 (Bold)
+- Use Medium (500) as default for headings to maintain the friendly, approachable feel
+- Body text uses Regular (400)
 
-# Non-Genericness (Bold Choices)
+**Type Scale** (Material Design 3 scale):
+- **Display Large**: 3.5rem / 56px (Hero headlines)
+- **Headline Large**: 3rem / 48px (Section titles)
+- **Headline Medium**: 2rem / 32px (Subsection titles)
+- **Title Large**: 1.5rem / 24px (Card titles)
+- **Body Large**: 1.25rem / 20px (Lead paragraphs)
+- **Body Medium**: 1rem / 16px (Standard body text)
+- **Label Medium**: 0.875rem / 14px (Button text)
+- **Label Small**: 0.75rem / 12px (Captions, metadata)
 
-**Unique Visual Signatures:**
-- **NO STRAIGHT LINES**: Every container, button, card, and frame uses irregular border-radius values—never standard Tailwind rounded classes
-- **Hand-Drawn SVG Decorations**:
-  - Arrow pointing to hero CTA with dashed path
-  - Squiggly connecting line between "How It Works" steps
-  - Corner frame marks on hero image placeholder
-- **Authentic Paper Effects**:
-  - Tape strips (translucent gray rectangles) on feature cards
-  - Thumbtack pins (colored circles) for card decoration
-  - Dashed circle overlay highlighting popular pricing tier
-  - Speech bubble geometric tails on testimonials
-- **Playful Typography Treatments**:
-  - Rotating exclamation mark in hero headline
-  - Wavy underline decoration on navigation links and footer headers
-  - Drop-cap first letter treatment in Product Detail section
-  - Post-it yellow sticky-note tag on Product Detail card
-- **Scribbled Accents**:
-  - Bouncing decorative circle near hero image (desktop only)
-  - Dashed borders on secondary elements and dividers
-  - Emoji sketches in blog post placeholders
-  - Line-through hover effect on footer links
-- **Interactive Personality**:
-  - Buttons "press flat" by eliminating shadow on active state
-  - Cards rotate slightly on hover
-  - Blog cards increase shadow offset on hover for "lift" effect
-  - Grayscale-to-color transition on blog images (removed in final implementation for simplicity)
+**Letter Spacing**:
+- Headings: Normal to tight (0 to -0.01em)
+- Body text: Normal (0)
+- Labels/buttons: Slightly wide (0.01em) for Medium weight at small sizes
 
-# Effects & Animation
-- **Hover**: "Jiggle" effect. `hover:rotate-1` or `hover:-rotate-2`.
-- **Transition**: `transition-transform duration-100` (Fast and snappy).
+**Line Height**:
+- Display/Headlines: 1.2 to 1.3 (tight for impact)
+- Body text: 1.5 to 1.6 (relaxed for readability)
+- Compact UI elements: 1.4
 
-# Spacing, Layout & Iconography
-- **Max Width**: `max-w-5xl` (Keep it contained like a sketchbook).
-- **Icons**: `lucide-react` icons with `stroke-width={2.5}` or `3`.
-- **Icon Style**: Enclose key icons in rough circles.
+### Radius & Borders
 
-# Responsive Strategy
+Material You uses **organic, generous rounding** to create a friendly aesthetic.
 
-**Mobile-First Approach:**
-- **Typography Scaling**:
-  - Headings: `text-4xl md:text-5xl` or `text-5xl md:text-6xl`
-  - Body text: `text-lg md:text-xl` or `text-base md:text-xl`
-  - Buttons: `text-lg md:text-2xl`
-- **Layout Stacking**:
-  - All grids collapse to single column on mobile, expand to 2-3 columns on `md:` breakpoint
-  - Hero switches from 2-column to stacked with `md:grid-cols-2`
-  - Stats: 2-column grid on mobile (`grid-cols-2`), 4-column on desktop (`md:grid-cols-4`)
-- **Hide Decorative Elements**:
-  - Hand-drawn arrow near CTA: `hidden md:block`
-  - Bouncing decorative circle: `hidden md:block`
-  - Squiggly connecting line in "How It Works": `hidden md:block`
-  - Dashed circle on pricing card: `hidden md:block`
-- **Maintain Core Aesthetic**:
-  - Keep wobbly borders and handwritten fonts on all screen sizes
-  - Reduce rotation slightly if needed (`-rotate-1` instead of `-rotate-2`)
-  - Maintain hard offset shadows (never add blur)
-  - Preserve playful personality and irregular shapes
-- **Touch-Friendly Targets**:
-  - Buttons use minimum `h-12` (48px) for accessibility
-  - Adequate spacing between interactive elements with `gap-8`
-- **Spacing Adjustments**:
-  - Section padding remains `py-20` for vertical rhythm
-  - Reduce horizontal padding when needed: `px-6`
-  - Stats scale down: `h-24 w-24 md:h-32 md:w-32`
-  - Pricing cards: `p-6 md:p-8` for better mobile fit
+**Radius Values**:
+- **Extra Small**: `8px` - Minimal UI elements, chips
+- **Small**: `12px` - Small cards, compact elements
+- **Medium**: `16px` - Default card radius
+- **Large**: `24px` - Prominent cards, containers
+- **Extra Large**: `28px` - Dialogs, sheets, large surfaces
+- **Extra Extra Large**: `32px` to `48px` - Hero sections, major containers
+- **Full (Pills)**: `9999px` or `rounded-full` - All buttons, chips, badges, FABs
+
+**When to Use Each**:
+- Buttons, chips, badges: Always `full` (pill-shaped)
+- Standard cards: `24px` (Large)
+- Feature cards, FAQ items: `24px` (Large)
+- Hero containers, major sections: `48px` (Extra Extra Large)
+- Nested content cards: `32px`
+- Input fields: Top corners `12px`, bottom corners `0px` (Material 3 filled text field style)
+
+**Borders**:
+- Use sparingly - tonal surfaces are preferred over borders
+- When needed, use `#79747E` (Outline) color
+- Thickness: 1px standard, 2px for focus states (bottom border on inputs)
+- On colored backgrounds, use `white/10` or `white/20` for subtle borders
+
+### Shadows & Effects
+
+Material You uses **elevation** through subtle shadows combined with tonal surfaces, not dramatic drop shadows. This implementation enhances the baseline with progressive shadow transitions.
+
+**Shadow Philosophy**:
+- **Elevation 0** (Default): No shadow or `shadow-sm` - use tonal surface difference for depth
+- **Elevation 1**: `shadow-sm` - Subtle lift for cards at rest (default state for most cards)
+- **Elevation 2**: `shadow-md` - Hover state for interactive cards, default for important containers
+- **Elevation 3**: `shadow-lg` to `shadow-xl` - FABs, major sections, raised buttons on hover
+- **Elevation 4+**: Reserved for modals, dialogs (not common in base design)
+
+**Enhanced Shadow Patterns**:
+- All interactive cards transition from `shadow-sm` to `shadow-md` on hover
+- Important sections (Benefits, Final CTA) start at `shadow-lg`
+- Combined with scale transforms (`hover:scale-[1.02]`) for depth enhancement
+- Shadow transitions use 300ms duration for smooth, confident movement
+
+**Shadow Composition**:
+- Soft, diffuse shadows (large blur, minimal spread)
+- Shadow colors should be near-black with low opacity (5-15%)
+- Combine with tonal surface colors for best effect
+- Layer shadows with background blur shapes for atmospheric richness
+
+**Blur Effects** (Signature Technique):
+- Large organic shapes: `blur-3xl` (64px+)
+- Background decorative elements: Colored circles/shapes at 10-30% opacity with heavy blur
+- Atmospheric effect: Multiple overlapping blurred shapes with radial gradients
+- Glass-morphism cards: `backdrop-blur-sm` with `bg-white/10` to `bg-white/15` and borders at `border-white/10` to `border-white/20`
+- Hero sections: Multiple blur shapes positioned off-canvas with transforms
+
+**Glow/Aura Effects**:
+- Use radial gradients with transparency for ambient light
+- Color: Primary, secondary, or tertiary at 10-30% opacity
+- Position: Behind hero content, in major sections (Benefits, Final CTA), or on hover states
+- Animated glow: `opacity-0 group-hover:opacity-30` for progressive disclosure
+- Example: Numbered badges in How It Works section have hidden blur that reveals on hover
+
+### Textures & Patterns
+
+**Organic Decorative Shapes**:
+- Large rounded rectangles (`rounded-[100px]`) with one corner less rounded (`rounded-tr-[20px]`)
+- Perfect circles (`rounded-full`)
+- Layered with `mix-blend-multiply` for color richness
+- Use primary, secondary, and tertiary colors at 80-90% opacity
+- Apply `blur-3xl` for soft, atmospheric quality
+- Position partially off-canvas (using negative translate values)
+
+**Background Treatment**:
+- Never use solid white - always use Surface color (#FFFBFE)
+- Radial gradients for subtle color washes: `bg-[radial-gradient(circle_at_top_right,_var(--color-md-secondary)_0%,_transparent_40%)]`
+- Opacity: 10-20% for background patterns
+
+**Layering Strategy**:
+1. Base surface (tinted off-white)
+2. Decorative organic shapes (blurred, multiply blend)
+3. Surface container (content backgrounds)
+4. Content
+5. Interactive elements with state layers
+
+## Component Styling Principles
+
+### Buttons
+
+Material You buttons are **pill-shaped** and use a state layer system.
+
+**Variants**:
+1. **Filled (Primary)**:
+   - Background: Primary color
+   - Text: White
+   - Shape: `rounded-full` (pill)
+   - Shadow: None at rest, `shadow-md` on hover
+   - State layer: `bg-md-primary/90` on hover, `/80` on active
+   - Scale: `active:scale-95` for tactile feedback
+
+2. **Tonal (Secondary)**:
+   - Background: Secondary Container color
+   - Text: On Secondary Container color
+   - Shape: `rounded-full`
+   - State layer: Similar to filled
+   - Use for less prominent actions
+
+3. **Outlined**:
+   - Background: Transparent
+   - Border: 1px Outline color
+   - Text: Primary color
+   - Shape: `rounded-full`
+   - State layer: `bg-md-primary/5` on hover
+
+4. **Text/Ghost**:
+   - Background: Transparent
+   - Text: Primary color
+   - State layer: `bg-md-primary/10` on hover
+   - Shape: `rounded-full`
+
+5. **FAB (Floating Action Button)**:
+   - Background: Tertiary color
+   - Text: White
+   - Shape: `rounded-2xl` (28px) for square FABs, `rounded-full` for circular
+   - Shadow: `shadow-md` at rest, `shadow-xl` on hover
+   - Size: 56x56px (h-14 w-14)
+
+**Animation**:
+- Transition: 300ms duration
+- Easing: `cubic-bezier(0.2, 0, 0, 1)` - Material You's signature easing
+- Scale on active: `scale-95` for press feedback
+- Shadow should animate smoothly with same timing
+
+**Sizing**:
+- Small: `h-9` (36px)
+- Default: `h-10` (40px)
+- Large: `h-12` (48px)
+- Horizontal padding: Generous (`px-6` to `px-8`)
+
+### Cards/Containers
+
+**Visual Treatment**:
+- Background: Surface Container (`#F3EDF7`), never pure white
+- Border radius: `24px` (Large) for standard cards
+- Border: None by default - use tonal background for separation
+- Shadow: `shadow-sm` at rest, `shadow-md` on hover
+- Padding: Generous (`p-6` to `p-8`)
+
+**State Transitions**:
+- Hover: `hover:bg-md-surface-variant/20` or `hover:shadow-md`, combined with transforms
+- Duration: 300ms with standard easing (`transition-all duration-300`)
+- Scale: `hover:scale-[1.02]` for feature cards and interactive elements
+- Shadow elevation: `shadow-sm` to `shadow-md` on hover for all interactive cards
+- Group pattern: Use `group` class and `group-hover:` modifiers for coordinated animations
+
+**Nested Cards**:
+- Use even lighter backgrounds or transparent with borders
+- Example: On colored container, use `bg-white/10` with `border-white/10`
+
+**Special Containers**:
+- Hero sections: Extra large radius (`rounded-[48px]`), surface container background
+- Section backgrounds: Tonal fills with decorative blur shapes
+- Glass-morphism effects: `bg-white/10 backdrop-blur-sm border border-white/10`
+
+### Inputs (Material 3 Filled Text Field)
+
+**Distinctive Style**:
+- Top corners rounded (`rounded-t-lg` / 12px)
+- Bottom corners square
+- Bottom border: 2px solid Outline color
+- Background: Muted (Surface Container Low) color
+- Height: Tall (`h-14` / 56px)
+- Focus state: Bottom border changes to Primary color
+
+**Structure**:
+```
+┌─────────────┐  ← Rounded top
+│   Input     │  ← Muted background fill
+└─────────────┘  ← Square bottom with 2px border
+      ↑
+  Focus: Primary color
+```
+
+**State Handling**:
+- Rest: `border-md-border` (bottom)
+- Focus: `border-md-primary` (bottom)
+- Transition: 200ms color transition
+- Label: Placeholder uses `text-md-on-background/50`
+
+### Interactive States
+
+**State Layer System** (Key Material You Concept):
+Instead of changing the base color, overlay a semi-transparent layer:
+
+1. **Solid Color Elements** (buttons with bg):
+   - Hover: Base color at 90% (`bg-md-primary/90`)
+   - Active: Base color at 80% (`bg-md-primary/80`)
+
+2. **Transparent Elements** (ghost buttons, text buttons):
+   - Hover: Primary at 10% (`bg-md-primary/10`)
+   - Active: Primary at 5% (`bg-md-primary/5`)
+
+3. **Focus States**:
+   - Ring: 2px Primary color with 2px offset
+   - Additional: Can combine with hover state
+
+4. **Disabled States**:
+   - Opacity: 50% on entire element
+   - Cursor: `cursor-not-allowed`
+   - Pointer events: None
+
+**Transition Timing**:
+- Standard: `transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]`
+- Fast interactions (clicks): `duration-200`
+- Color transitions only: `transition-colors duration-200`
+
+## Layout Principles
+
+**Grid Usage**:
+- Use CSS Grid for card layouts: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+- Gap: Consistent spacing, typically `gap-6` (24px) or `gap-8` (32px)
+- Container: Use `.container` with `mx-auto` for centered max-width layouts
+
+**Spacing Rhythm**:
+- Base unit: 4px (Tailwind default)
+- Component internal padding: `p-6` (24px) to `p-8` (32px)
+- Section padding: `py-12` (48px) to `py-24` (96px)
+- Between sections: `mb-12` or `mb-24`
+- Generous whitespace is encouraged - don't cram content
+
+**Section Flow**:
+- Alternate between tonal backgrounds and default background
+- Hero in large rounded container with surface-container background
+- Some sections on default background, others on surface-container
+- Use full-width colored containers (primary/tertiary) sparingly for emphasis
+
+**Responsive Behavior**:
+- Border radius scales down on mobile (48px → 24px)
+- Padding reduces proportionally
+- Grid collapses gracefully to single column
+- Text sizes scale down one step on mobile
+
+## The "Bold Factor" (Non-Genericness)
+
+These signature elements MUST be present to achieve authentic Material You aesthetic with enhanced visual richness:
+
+1. **Organic Blur Shapes with Layering**:
+   - Large circular or pill-shaped divs with heavy blur (`blur-3xl`)
+   - Use primary, secondary, tertiary colors at 10-30% opacity
+   - Layer multiple shapes in major sections (Hero, Benefits, Final CTA)
+   - Combine with radial gradients for atmospheric depth
+   - Position partially off-canvas with transforms (`-translate-x-1/4`, `translate-y-1/3`)
+   - Creates atmospheric, dynamic backgrounds that feel alive
+
+2. **Tonal Surface System with Shadow Progression**:
+   - NEVER use pure white backgrounds
+   - Layer surfaces: Background → Surface Container → Surface Container Low
+   - Color difference is subtle but creates depth without heavy shadows
+   - All cards use surface-container color by default
+   - Progressive shadows: `shadow-sm` at rest, `shadow-md` on hover, `shadow-lg` for important sections
+
+3. **Pill-Shaped Buttons with Active Feedback**:
+   - ALL buttons must be `rounded-full` (except FABs which are rounded-2xl)
+   - No rectangular or lightly rounded buttons
+   - Active state: `active:scale-95` for tactile press feedback
+   - This is the most instantly recognizable Material You characteristic
+
+4. **Large Organic Border Radii**:
+   - Hero sections and major containers use 32px to 48px radius
+   - Regular cards use 24px radius
+   - This isn't just "rounded corners" - it's architectural, shaping the entire layout
+   - Creates a friendly, approachable feel vs. the rigid rectangles of MD2
+
+5. **State Layer Interaction Model with Micro-Animations**:
+   - Hover/press states use opacity overlays, not color shifts
+   - Visible as `bg-color/90` or `bg-color/10` patterns
+   - Smooth cubic-bezier easing: `cubic-bezier(0.2, 0, 0, 1)`
+   - Enhanced with scale transforms, shadow elevations, and glow effects
+   - Group interactions: Use `group` and `group-hover:` for coordinated animations
+
+6. **Asymmetric Elevation** (Enhancement):
+   - Featured pricing tier: `md:-translate-y-4` to lift above siblings
+   - Creates visual hierarchy through vertical positioning
+   - Combined with ring highlight (`ring-2 ring-md-primary`) for emphasis
+
+7. **Rich Micro-Interactions** (Enhancement):
+   - Blog cards: Image zoom on hover (`group-hover:scale-105`)
+   - Feature cards: Hover scale on entire card (`hover:scale-[1.02]`)
+   - How It Works badges: Glow effect reveals on hover
+   - Pricing features: Translate-x on hover for list items
+   - Every interactive element has smooth, satisfying feedback
+
+## Anti-Patterns (What to Avoid)
+
+**Don't:**
+- ❌ Use pure white (#FFFFFF) for backgrounds - breaks the tonal system
+- ❌ Use rectangular or slightly rounded buttons - must be pill-shaped
+- ❌ Use heavy drop shadows - MD3 prefers subtle elevation with tonal surfaces
+- ❌ Change button colors on hover - use state layers (opacity overlays) instead
+- ❌ Use sharp corners on major containers - generosity with border radius is key
+- ❌ Ignore the organic blur shapes - they're signature to the style
+- ❌ Use pure black text - use the On Surface color (#1C1B1F) with warmth
+- ❌ Flatten inputs - use the distinctive filled text field style with bottom border
+- ❌ Create harsh geometric patterns - shapes should feel organic, soft, flowing
+- ❌ Rely on borders for container separation - use tonal backgrounds instead
+
+**Common Mistakes**:
+- Making border radius too small (16px is minimum for cards, 24px+ is better)
+- Forgetting to round top corners but square bottom corners on inputs
+- Using hover color changes instead of state layers
+- Over-using shadows when tonal surfaces would work better
+- Not layering enough organic shapes in backgrounds
+- Making the color palette too muted - MD3 is expressive and colorful
+- Missing micro-interactions - every interactive element should have smooth feedback
+- Forgetting the `group` pattern for coordinated hover effects
+- Not using `active:scale-95` on clickable elements for tactile feedback
+- Static cards without hover states - breaks the interactive, responsive feel
+
+## Animation & Motion
+
+**Easing Function**:
+- Standard: `cubic-bezier(0.2, 0, 0, 1)` - Material You's signature easing
+- This creates smooth, confident movement that feels neither robotic nor bouncy
+- Also known as "Emphasized Decelerate" in Material specs
+
+**Duration**:
+- Micro-interactions (button hover): 200ms
+- Standard transitions (cards, surfaces): 300ms
+- Large surfaces (modals, sheets): 400-500ms
+- Never exceed 500ms for UI transitions
+
+**Transform Patterns**:
+- Scale on press: `active:scale-95` for tactile feedback
+- Hover lift: Can use subtle `translate-y` (1-2px) combined with shadow increase
+- Entrance animations: Fade + slight scale or slide
+- Exit animations: Faster than entrance (200ms vs 300ms)
+
+**What Animates**:
+- Background color (state layers)
+- Shadow elevation
+- Scale (on press)
+- Opacity (for overlays, toasts)
+- Transform (for FABs, special interactions)
+
+**What Doesn't Animate**:
+- Border radius (stays constant)
+- Layout shifts (use fixed dimensions or smooth height transitions)
+- Color hue shifts (only opacity changes for state layers)
+
+## Accessibility Considerations
+
+**Contrast Requirements**:
+- Text on Surface background: 4.5:1 minimum (On Surface color: #1C1B1F)
+- Text on Primary: AAA level (pure white #FFFFFF)
+- Outline color for borders: 3:1 against surfaces
+- Ensure tonal surface differences are visible (not just decorative)
+
+**Focus States**:
+- All interactive elements must have visible focus ring
+- Use `focus-visible:ring-2 focus-visible:ring-md-primary focus-visible:ring-offset-2`
+- Ring color: Primary
+- Ring offset: 2px for separation from element
+
+**Touch Targets**:
+- Minimum: 44x44px (follows WCAG guidelines)
+- Default button height: 40-48px (meets minimum)
+- FABs: 56x56px (generous touch target)
+- Add padding around small interactive elements if needed
+
+**Motion Preferences**:
+- Respect `prefers-reduced-motion` for users with vestibular disorders
+- Reduce or remove scale transforms, translate animations
+- Keep color transitions but remove movement
+- Example: `@media (prefers-reduced-motion: reduce) { * { animation: none; transition-duration: 0.01ms; } }`
+
+**Screen Reader Considerations**:
+- Decorative organic shapes should have `aria-hidden="true"`
+- Ensure color isn't the only indicator of state
+- Icon-only buttons must have accessible labels
+- Form inputs need associated labels (visible or aria-label)
+
+---
+
+## Implementation Checklist
+
+To ensure full Material You compliance with enhanced depth and interactivity:
+
+**Core Material You Elements**:
+- [ ] Using Roboto font (400, 500, 700 weights)
+- [ ] All buttons are `rounded-full` (pill-shaped)
+- [ ] Background is #FFFBFE (not pure white)
+- [ ] Cards use Surface Container (#F3EDF7) backgrounds
+- [ ] Organic blur shapes present in hero/key sections
+- [ ] State layers (opacity overlays) for hover/active states
+- [ ] Cubic-bezier(0.2, 0, 0, 1) easing on transitions
+- [ ] Large border radii on major containers (32-48px)
+- [ ] Inputs use filled text field style (rounded top, border bottom)
+- [ ] Focus rings on all interactive elements
+- [ ] Generous spacing and padding throughout
+
+**Enhanced Implementation**:
+- [ ] Progressive shadow system: `shadow-sm` → `shadow-md` on hover
+- [ ] Multiple blur shapes with radial gradients in major sections
+- [ ] `active:scale-95` on all clickable elements for tactile feedback
+- [ ] `group` pattern with coordinated hover animations
+- [ ] Hover scale (`hover:scale-[1.02]`) on feature cards
+- [ ] Image zoom on blog card hover (`group-hover:scale-105`)
+- [ ] Asymmetric elevation on featured pricing tier (`md:-translate-y-4`)
+- [ ] Glow effects that reveal on hover (How It Works badges)
+- [ ] Glass-morphism cards in Benefits section with backdrop-blur
+- [ ] Shadow-inner on Product Detail visualization container
+- [ ] Header with border-bottom and backdrop-blur
+- [ ] All transitions use 300ms duration minimum
+- [ ] Hover states on FAQ items with color transitions
+- [ ] Input focus states include ring for enhanced visibility
 </design-system>
