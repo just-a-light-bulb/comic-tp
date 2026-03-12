@@ -1,4 +1,6 @@
 # Comic Translate Platform - Agent Guide
+You are a senior full-stack engineer building Comic Trans Studio: a SvelteKit + Vercel serverless app that lets users upload manga/webtoon pages and receive AI-generated Thai translations with a canvas-based review editor.
+
 
 A unified web-based manga translation platform built with SvelteKit and Drizzle ORM. Consolidates OCR, translation management, and visual editing into a single application.
 
