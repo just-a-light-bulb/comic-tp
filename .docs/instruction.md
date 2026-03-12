@@ -15,7 +15,7 @@ Deliver production-ready code. Every file must be runnable without modification.
 | Hosting | Vercel (serverless functions + Edge Config) |
 | Auth | Kinde (OAuth2 — Google + magic link) |
 | File storage | Uploadcare (signed uploads, CDN delivery) |
-| Database | PostgreSQL via **Prisma ORM** |
+| Database | PostgreSQL via **Drizzle ORM** + drizzle-kit (migrations) |
 | AI routing | OpenRouter (Claude 3.5 Sonnet as default model) |
 | Canvas editor | **Fabric.js v5** (do NOT use raw Canvas API) |
 | PDF export | pdf-lib |
@@ -94,158 +94,208 @@ src/
     stores/
       editor.ts                         # activeRegionId writable store
     server/
-      db.ts                             # Prisma client singleton
+      db/
+        schema.ts                       # Drizzle table + enum definitions
+        index.ts                        # Drizzle client singleton (postgres-js)
       kinde.ts                          # Kinde server helpers
       uploadcare.ts                     # Uploadcare REST helpers
       openrouter.ts                     # OpenRouter fetch wrapper
   app.html
-prisma/
-  schema.prisma
+drizzle/                                # Generated SQL migrations (drizzle-kit output)
+drizzle.config.ts                       # drizzle-kit config
 vercel.json
 ```
 
 ---
 
-## DATABASE SCHEMA (Prisma — copy exactly)
+## DATABASE SCHEMA (Drizzle — copy exactly)
 
-```prisma
-generator client {
-  provider = "prisma-client-js"
-}
+```ts
+// src/lib/server/db/schema.ts
+import {
+  pgTable, pgEnum, serial, integer, text, varchar,
+  boolean, timestamp, uuid, index, uniqueIndex,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { createId } from '@paralleldrive/cuid2';
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// ── Enums ────────────────────────────────────────────────────────────────────
+export const langEnum            = pgEnum('lang',              ['JA','ZH','KO','TH','EN','VI']);
+export const pageStatusEnum      = pgEnum('page_status',       ['PENDING','PROCESSING','DETECTED','TRANSLATED','APPROVED','RENDERED']);
+export const jobStatusEnum       = pgEnum('job_status',        ['QUEUED','RUNNING','DONE','ERROR']);
+export const genderCodeEnum      = pgEnum('gender_code',       ['MALE','FEMALE','NEUTRAL','UNKNOWN']);
+export const regionTypeEnum      = pgEnum('region_type',       ['DIALOGUE','THOUGHT','NARRATION','SFX','SIGNAGE']);
+export const translationStyleEnum = pgEnum('translation_style',['NATURAL','LITERAL','FORMAL','CASUAL']);
 
-enum Lang { JA ZH KO TH EN VI }
-enum PageStatus { PENDING PROCESSING DETECTED TRANSLATED APPROVED RENDERED }
-enum JobStatus { QUEUED RUNNING DONE ERROR }
-enum GenderCode { MALE FEMALE NEUTRAL UNKNOWN }
-enum RegionType { DIALOGUE THOUGHT NARRATION SFX SIGNAGE }
-enum TranslationStyle { NATURAL LITERAL FORMAL CASUAL }
+// ── Tables ───────────────────────────────────────────────────────────────────
+export const users = pgTable('users', {
+  id:        text('id').primaryKey().$defaultFn(() => createId()),
+  kindeId:   text('kinde_id').notNull().unique(),
+  email:     text('email').notNull().unique(),
+  isPro:     boolean('is_pro').notNull().default(false),
+  apiKey:    varchar('api_key', { length: 200 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
 
-model User {
-  id        String    @id @default(cuid())
-  kindeId   String    @unique
-  email     String    @unique
-  isPro     Boolean   @default(false)
-  apiKey    String?   @db.VarChar(200)
-  createdAt DateTime  @default(now())
-  projects  Project[]
-}
+export const projects = pgTable('projects', {
+  id:        text('id').primaryKey().$defaultFn(() => createId()),
+  userId:    text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title:     varchar('title', { length: 120 }).notNull(),
+  srcLang:   langEnum('src_lang').notNull(),
+  tgtLang:   langEnum('tgt_lang').notNull(),
+  style:     translationStyleEnum('style').notNull().default('NATURAL'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (t) => [
+  index('projects_user_id_idx').on(t.userId),
+]);
 
-model Project {
-  id         String               @id @default(cuid())
-  userId     String
-  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title      String               @db.VarChar(120)
-  srcLang    Lang
-  tgtLang    Lang
-  style      TranslationStyle     @default(NATURAL)
-  createdAt  DateTime             @default(now())
-  chapters   Chapter[]
-  characters ProjectCharacter[]
-  memory     TranslationMemory[]
-  @@index([userId])
-}
+export const projectCharacters = pgTable('project_characters', {
+  id:        serial('id').primaryKey(),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  name:      varchar('name', { length: 80 }).notNull(),
+  gender:    genderCodeEnum('gender').notNull().default('UNKNOWN'),
+  particle:  varchar('particle', { length: 10 }),
+  notes:     varchar('notes', { length: 300 }),
+}, (t) => [
+  uniqueIndex('proj_char_project_name_idx').on(t.projectId, t.name),
+  index('proj_char_project_id_idx').on(t.projectId),
+]);
 
-model ProjectCharacter {
-  id        Int        @id @default(autoincrement())
-  projectId String
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name      String     @db.VarChar(80)
-  gender    GenderCode @default(UNKNOWN)
-  particle  String?    @db.VarChar(10)
-  notes     String?    @db.VarChar(300)
-  @@unique([projectId, name])
-  @@index([projectId])
-}
+export const chapters = pgTable('chapters', {
+  id:        serial('id').primaryKey(),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  number:    integer('number').notNull(),
+  title:     varchar('title', { length: 120 }).notNull(),
+  status:    pageStatusEnum('status').notNull().default('PENDING'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('chapters_project_number_idx').on(t.projectId, t.number),
+  index('chapters_project_id_idx').on(t.projectId),
+]);
 
-model Chapter {
-  id        Int        @id @default(autoincrement())
-  projectId String
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  number    Int
-  title     String     @db.VarChar(120)
-  status    PageStatus @default(PENDING)
-  createdAt DateTime   @default(now())
-  pages     Page[]
-  @@unique([projectId, number])
-  @@index([projectId])
-}
+export const pages = pgTable('pages', {
+  id:             serial('id').primaryKey(),
+  chapterId:      integer('chapter_id').notNull().references(() => chapters.id, { onDelete: 'cascade' }),
+  pageNumber:     integer('page_number').notNull(),
+  srcFileId:      uuid('src_file_id').notNull(),
+  cleanFileId:    uuid('clean_file_id'),
+  renderedFileId: uuid('rendered_file_id'),
+  status:         pageStatusEnum('status').notNull().default('PENDING'),
+  createdAt:      timestamp('created_at').notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('pages_chapter_page_idx').on(t.chapterId, t.pageNumber),
+  index('pages_chapter_id_idx').on(t.chapterId),
+  index('pages_status_idx').on(t.status),         // cron queue scan
+]);
 
-model Page {
-  id             Int        @id @default(autoincrement())
-  chapterId      Int
-  chapter        Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  pageNumber     Int
-  srcFileId      String     @db.Uuid
-  cleanFileId    String?    @db.Uuid
-  renderedFileId String?    @db.Uuid
-  status         PageStatus @default(PENDING)
-  createdAt      DateTime   @default(now())
-  regions        TextRegion[]
-  jobs           TranslationJob[]
-  @@unique([chapterId, pageNumber])
-  @@index([chapterId])
-  @@index([status])
-}
+export const textRegions = pgTable('text_regions', {
+  id:              serial('id').primaryKey(),
+  pageId:          integer('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  bubbleIndex:     integer('bubble_index').notNull(),
+  regionType:      regionTypeEnum('region_type').notNull().default('DIALOGUE'),
+  bboxX:           integer('bbox_x').notNull(),   // store as 4 ints — NOT JSON
+  bboxY:           integer('bbox_y').notNull(),
+  bboxW:           integer('bbox_w').notNull(),
+  bboxH:           integer('bbox_h').notNull(),
+  originalText:    text('original_text').notNull(),
+  translatedText:  text('translated_text'),
+  speakerName:     varchar('speaker_name', { length: 80 }),
+  speakerGender:   genderCodeEnum('speaker_gender').notNull().default('UNKNOWN'),
+  thaiParticle:    varchar('thai_particle', { length: 10 }),
+  confidence:      integer('confidence').notNull().default(0),  // 0-100 int, NOT float
+  isApproved:      boolean('is_approved').notNull().default(false),
+  isManual:        boolean('is_manual').notNull().default(false),
+  fontSizeOverride: integer('font_size_override'),
+  memoryId:        integer('memory_id').references(() => translationMemory.id),
+  createdAt:       timestamp('created_at').notNull().defaultNow(),
+  updatedAt:       timestamp('updated_at').notNull().defaultNow().$onUpdateFn(() => new Date()),
+}, (t) => [
+  index('text_regions_page_id_idx').on(t.pageId),
+  index('text_regions_page_approved_idx').on(t.pageId, t.isApproved),  // bulk-approve
+]);
 
-model TextRegion {
-  id             Int        @id @default(autoincrement())
-  pageId         Int
-  page           Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  bubbleIndex    Int
-  regionType     RegionType @default(DIALOGUE)
-  bboxX          Int
-  bboxY          Int
-  bboxW          Int
-  bboxH          Int
-  originalText   String     @db.Text
-  translatedText String?    @db.Text
-  speakerName    String?    @db.VarChar(80)
-  speakerGender  GenderCode @default(UNKNOWN)
-  thaiParticle   String?    @db.VarChar(10)
-  confidence     Int        @default(0)
-  isApproved     Boolean    @default(false)
-  isManual       Boolean    @default(false)
-  fontSizeOverride Int?
-  memoryId       Int?
-  memory         TranslationMemory? @relation(fields: [memoryId], references: [id])
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  @@index([pageId])
-  @@index([pageId, isApproved])
-}
+export const translationMemory = pgTable('translation_memory', {
+  id:          serial('id').primaryKey(),
+  projectId:   text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  sourceText:  text('source_text').notNull(),
+  sourceHash:  varchar('source_hash', { length: 64 }).notNull(),  // SHA-256 for fast lookup
+  targetText:  text('target_text').notNull(),
+  useCount:    integer('use_count').notNull().default(1),
+  createdAt:   timestamp('created_at').notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('tm_project_hash_idx').on(t.projectId, t.sourceHash),
+  index('tm_project_id_idx').on(t.projectId),
+]);
 
-model TranslationMemory {
-  id          Int      @id @default(autoincrement())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  sourceText  String   @db.Text
-  sourceHash  String   @db.VarChar(64)
-  targetText  String   @db.Text
-  useCount    Int      @default(1)
-  createdAt   DateTime @default(now())
-  regions     TextRegion[]
-  @@unique([projectId, sourceHash])
-  @@index([projectId])
-}
+export const translationJobs = pgTable('translation_jobs', {
+  id:           serial('id').primaryKey(),
+  pageId:       integer('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  status:       jobStatusEnum('status').notNull().default('QUEUED'),
+  aiModel:      varchar('ai_model', { length: 60 }).notNull(),
+  step:         integer('step').notNull().default(0),  // 0-3
+  errorMessage: varchar('error_message', { length: 500 }),
+  startedAt:    timestamp('started_at'),
+  completedAt:  timestamp('completed_at'),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
+}, (t) => [
+  index('jobs_status_created_at_idx').on(t.status, t.createdAt),  // cron FIFO queue
+]);
 
-model TranslationJob {
-  id           Int       @id @default(autoincrement())
-  pageId       Int
-  page         Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  status       JobStatus @default(QUEUED)
-  aiModel      String    @db.VarChar(60)
-  step         Int       @default(0)
-  errorMessage String?   @db.VarChar(500)
-  startedAt    DateTime?
-  completedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  @@index([status, createdAt])
-}
+// ── Relations (for Drizzle relational queries) ────────────────────────────────
+export const usersRelations = relations(users, ({ many }) => ({
+  projects: many(projects),
+}));
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  user:       one(users,       { fields: [projects.userId],    references: [users.id] }),
+  chapters:   many(chapters),
+  characters: many(projectCharacters),
+  memory:     many(translationMemory),
+}));
+export const chaptersRelations = relations(chapters, ({ one, many }) => ({
+  project: one(projects, { fields: [chapters.projectId], references: [projects.id] }),
+  pages:   many(pages),
+}));
+export const pagesRelations = relations(pages, ({ one, many }) => ({
+  chapter: one(chapters, { fields: [pages.chapterId], references: [chapters.id] }),
+  regions: many(textRegions),
+  jobs:    many(translationJobs),
+}));
+export const textRegionsRelations = relations(textRegions, ({ one }) => ({
+  page:   one(pages,             { fields: [textRegions.pageId],   references: [pages.id] }),
+  memory: one(translationMemory, { fields: [textRegions.memoryId], references: [translationMemory.id] }),
+}));
+```
+
+```ts
+// src/lib/server/db/index.ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './schema';
+
+const client = postgres(process.env.DATABASE_URL!);
+export const db = drizzle(client, { schema });
+```
+
+```ts
+// drizzle.config.ts  (project root)
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  schema:      './src/lib/server/db/schema.ts',
+  out:         './drizzle',
+  dialect:     'postgresql',
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});
+```
+
+**Migration commands:**
+```bash
+npm install drizzle-orm postgres @paralleldrive/cuid2
+npm install -D drizzle-kit
+
+npx drizzle-kit generate   # generate SQL migration files into ./drizzle/
+npx drizzle-kit migrate    # apply migrations to the database
+npx drizzle-kit studio     # optional: browse schema in browser
 ```
 
 ---
@@ -479,14 +529,14 @@ CRON_SECRET=
 
 - Cron job: process **one** job per invocation (prevent Vercel timeout). Max execution time must stay under 10 seconds.
 - Canvas: call `fc.requestRenderAll()` (batched) — never `fc.renderAll()` in a loop.
-- DB: all reads in the editor hot path must use the indexed columns. Never use `findMany` without a `where` clause on an indexed field.
+- DB: all reads in the editor hot path must hit indexed columns. Never call `db.query.*` or `db.select()` without a `where` condition on an indexed field.
 - Font loading: preconnect + `display=swap` — no layout shift.
 
 ---
 
 ## WHAT TO BUILD FIRST (recommended order)
 
-1. `prisma/schema.prisma` + migration
+1. `src/lib/server/db/schema.ts` + `npx drizzle-kit generate && drizzle-kit migrate`
 2. `src/hooks.server.ts` (auth middleware)
 3. `/api/projects` and `/api/chapters` (CRUD)
 4. `/api/pages` + Uploadcare signed upload flow
@@ -506,7 +556,7 @@ CRON_SECRET=
 3. The cron endpoint MUST validate `CRON_SECRET`. Reject all other callers.
 4. Every API route returns the standard `{ ok, data?, error? }` envelope.
 5. Bounding boxes are stored as 4 separate `Int` columns — never as JSON.
-6. All enum values must match the Prisma enum definitions exactly.
+6. All enum values must match the Drizzle `pgEnum` definitions in `schema.ts` exactly.
 7. Do not round corners on `.panel-frame` or `.btn-primary` — `border-radius: 0`.
 8. Load `Noto Serif Thai` explicitly alongside `Noto Serif` — Thai text will break without it.
 9. `strokeWidth` on canvas overlays must scale with zoom: `2 / currentZoom`.
