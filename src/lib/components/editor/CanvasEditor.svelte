@@ -562,7 +562,7 @@
 		image.set({ left: 0, top: 0, selectable: false, evented: false });
 		(fc as any).setBackgroundImage(image, {
 			callback: () => {
-				setCanvasSize(image.width, image.height);
+				setCanvasSize();
 				fitToScreen();
 				renderAllOverlays();
 			}
