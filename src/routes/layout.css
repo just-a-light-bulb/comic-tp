@@ -1,121 +1,212 @@
-@import "tailwindcss";
-
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+	--md-bg: #fffbfe;
+	--md-surface: #f3edf7;
+	--md-surface-low: #e7e0ec;
+	--md-primary: #6750a4;
+	--md-on-primary: #ffffff;
+	--md-secondary-container: #e8def8;
+	--md-on-secondary-container: #1d192b;
+	--md-tertiary: #7d5260;
+	--md-outline: #79747e;
+	--md-on-surface: #1c1b1f;
+	--md-on-surface-variant: #49454f;
 }
 
-.dark {
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.923 0.003 48.717);
-  --primary-foreground: oklch(0.216 0.006 56.043);
-  --secondary: oklch(0.268 0.007 34.298);
-  --secondary-foreground: oklch(0.985 0.001 106.423);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.553 0.013 58.071);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+* {
+	box-sizing: border-box;
 }
 
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+body {
+	margin: 0;
+	font-family:
+		'Roboto',
+		system-ui,
+		-apple-system,
+		sans-serif;
+	background: var(--md-bg);
+	color: var(--md-on-surface);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+.md3-page {
+	position: relative;
+	min-height: 100dvh;
+	padding: 1.25rem;
+	background: var(--md-bg);
+	overflow: hidden;
+}
+
+.md3-page::before,
+.md3-page::after {
+	content: '';
+	position: absolute;
+	border-radius: 999px;
+	filter: blur(48px);
+	pointer-events: none;
+	z-index: 0;
+}
+
+.md3-page::before {
+	top: -140px;
+	left: -70px;
+	width: 340px;
+	height: 340px;
+	background: rgb(103 80 164 / 16%);
+}
+
+.md3-page::after {
+	bottom: -120px;
+	right: -70px;
+	width: 360px;
+	height: 360px;
+	background: rgb(125 82 96 / 15%);
+}
+
+.md3-content {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	gap: 1rem;
+}
+
+.md3-surface {
+	background: var(--md-surface);
+	border-radius: 24px;
+	padding: 1rem;
+	border: 1px solid rgb(121 116 126 / 24%);
+	box-shadow:
+		0 1px 2px rgb(28 27 31 / 12%),
+		0 6px 18px rgb(103 80 164 / 10%);
+}
+
+.md3-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.md3-title {
+	margin: 0;
+	font-size: clamp(1.3rem, 2vw, 1.75rem);
+}
+
+.md3-subtitle {
+	margin: 0.25rem 0 0;
+	color: var(--md-on-surface-variant);
+}
+
+.md3-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 0.75rem;
+}
+
+.md3-card {
+	display: grid;
+	gap: 0.35rem;
+	padding: 0.9rem;
+	border-radius: 20px;
+	background: #fff;
+	border: 1px solid rgb(121 116 126 / 22%);
+	text-decoration: none;
+	color: inherit;
+	transition:
+		transform 200ms cubic-bezier(0.2, 0, 0, 1),
+		box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgb(103 80 164 / 16%);
+}
+
+.md3-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.md3-chip,
+.md3-button,
+.md3-link-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	border: none;
+	padding: 0.5rem 0.9rem;
+	font-weight: 600;
+	font-size: 0.85rem;
+	text-decoration: none;
+	transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+	cursor: pointer;
+}
+
+.md3-button,
+.md3-link-button {
+	background: var(--md-primary);
+	color: var(--md-on-primary);
+}
+
+.md3-button:hover,
+.md3-link-button:hover {
+	background: color-mix(in oklab, var(--md-primary) 90%, black);
+}
+
+.md3-chip {
+	background: var(--md-secondary-container);
+	color: var(--md-on-secondary-container);
+}
+
+.md3-chip:hover {
+	background: color-mix(in oklab, var(--md-secondary-container) 86%, var(--md-primary));
+}
+
+.md3-form {
+	display: grid;
+	gap: 0.75rem;
+	max-width: 620px;
+}
+
+.md3-form label {
+	display: grid;
+	gap: 0.35rem;
+	font-size: 0.9rem;
+}
+
+.md3-form input,
+.md3-form select,
+.md3-form textarea {
+	border: none;
+	border-bottom: 2px solid var(--md-outline);
+	border-radius: 16px 16px 0 0;
+	background: var(--md-surface-low);
+	padding: 0.6rem 0.7rem;
+	font: inherit;
+}
+
+.md3-form input:focus-visible,
+.md3-form select:focus-visible,
+.md3-form textarea:focus-visible,
+.md3-button:focus-visible,
+.md3-link-button:focus-visible,
+.md3-chip:focus-visible {
+	outline: 2px solid var(--md-primary);
+	outline-offset: 2px;
+}
+
+.md3-thumb {
+	width: 100%;
+	aspect-ratio: 3 / 4;
+	object-fit: cover;
+	border-radius: 16px;
+}
+
+.md3-metric {
+	font-size: 0.84rem;
+	color: var(--md-on-surface-variant);
 }
