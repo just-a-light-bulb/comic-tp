@@ -133,11 +133,11 @@
 		return tones.pending;
 	};
 
-	const setCanvasSize = (): void => {
+	const setCanvasSize = (imageWidth?: number, imageHeight?: number): void => {
 		if (!rootEl || !canvasEl || !fc) return;
 		const dpr = window.devicePixelRatio || 1;
-		const width = Math.max(rootEl.clientWidth, 1);
-		const height = Math.max(rootEl.clientHeight, 1);
+		const width = imageWidth ?? Math.max(rootEl.clientWidth, 1);
+		const height = imageHeight ?? Math.max(rootEl.clientHeight, 1);
 		canvasEl.width = width * dpr;
 		canvasEl.height = height * dpr;
 		canvasEl.style.width = `${width}px`;
@@ -148,8 +148,8 @@
 	const fitToScreen = (): void => {
 		if (!fc?.backgroundImage) return;
 		const bg = fc.backgroundImage;
-		const imageWidth = (bg.width ?? 1) * (bg.scaleX ?? 1);
-		const imageHeight = (bg.height ?? 1) * (bg.scaleY ?? 1);
+		const imageWidth = bg.width ?? 1;
+		const imageHeight = bg.height ?? 1;
 		const canvasWidth = fc.getWidth();
 		const canvasHeight = fc.getHeight();
 		const baseZoom = Math.min(canvasWidth / imageWidth, canvasHeight / imageHeight);
@@ -512,6 +512,7 @@
 		});
 		image.set({ left: 0, top: 0, selectable: false, evented: false });
 		fc.setBackgroundImage(image, () => {
+			setCanvasSize(image.width, image.height);
 			fitToScreen();
 			renderAllOverlays();
 		});
@@ -533,11 +534,16 @@
 		});
 		fc.on('selection:updated', (event: any) => {
 			const selected = event.selected?.[0];
-			if (selected?.data?.type === 'text') {
+			if (selected?.data?.type === 'region') {
+				activeRegionId.set(selected.data.regionId);
+				onActiveTextChange?.(null);
+			} else if (selected?.data?.type === 'text') {
+				activeRegionId.set(null);
 				onActiveTextChange?.(selected.data.textId);
 			}
 		});
 		fc.on('selection:cleared', () => {
+			activeRegionId.set(null);
 			onActiveTextChange?.(null);
 		});
 		fc.on('object:modified', (event: any) => {
@@ -584,7 +590,8 @@
 			if (opt.e.button === 1 || isSpaceHeld) {
 				isPanning = true;
 				fc.selection = false;
-				lastPanPoint = { x: opt.e.clientX, y: opt.e.clientY };
+				const pointer = fc.getPointer(opt.e);
+				lastPanPoint = { x: pointer.x, y: pointer.y };
 				fc.defaultCursor = 'grabbing';
 			}
 		});
@@ -615,10 +622,11 @@
 				return;
 			}
 			if (!isPanning) return;
-			const dx = opt.e.clientX - lastPanPoint.x;
-			const dy = opt.e.clientY - lastPanPoint.y;
+			const pointer = fc.getPointer(opt.e);
+			const dx = pointer.x - lastPanPoint.x;
+			const dy = pointer.y - lastPanPoint.y;
 			fc.relativePan({ x: dx, y: dy });
-			lastPanPoint = { x: opt.e.clientX, y: opt.e.clientY };
+			lastPanPoint = { x: pointer.x, y: pointer.y };
 		});
 		fc.on('mouse:up', (opt: any) => {
 			if (drawingMode && drawingStart) {
@@ -652,8 +660,13 @@
 	onMount(() => {
 		const keyDown = (event: KeyboardEvent): void => {
 			if (event.code === 'Space') {
-				event.preventDefault();
-				isSpaceHeld = true;
+				const isInput =
+					event.target instanceof HTMLInputElement ||
+					event.target instanceof HTMLTextAreaElement ||
+					(event.target as HTMLElement).isContentEditable;
+				if (!isInput) {
+					isSpaceHeld = true;
+				}
 			}
 		};
 		const keyUp = (event: KeyboardEvent): void => {
@@ -667,7 +680,8 @@
 			fc = new fabricApi.Canvas(canvasEl as HTMLCanvasElement, {
 				selection: true,
 				preserveObjectStacking: true,
-				renderOnAddRemove: false
+				renderOnAddRemove: false,
+				defaultCursor: 'grab'
 			});
 			setCanvasSize();
 			attachEvents();
@@ -694,6 +708,54 @@
 			resizeObserver?.disconnect();
 			fc?.dispose();
 		};
+	});
+
+	$effect(() => {
+		if (!fc) return;
+		renderAllOverlays();
+	});
+
+	$effect(() => {
+		if (!fc || !imageUrl) return;
+		void loadImage();
+	});
+
+	$effect(() => {
+		if (!fc) return;
+		resetSignal;
+		fitToScreen();
+	});
+
+	$effect(() => {
+		const unsubscribe = activeRegionId.subscribe((id) => {
+			if (!id || suppressCanvasSync) return;
+			suppressCanvasSync = true;
+			centerRegion(id);
+			suppressCanvasSync = false;
+		});
+		return () => unsubscribe();
+	});
+
+	$effect(() => {
+		if (!fc || !rootEl) return;
+		if (drawingMode) {
+			rootEl.style.cursor = 'crosshair';
+			fc.selection = false;
+		} else {
+			rootEl.style.cursor = 'default';
+			fc.selection = true;
+		}
+	});
+
+	$effect(() => {
+		if (!fc) return;
+		for (const group of regionObjects.values()) {
+			group.set({ visible: !previewMode });
+		}
+		for (const text of textObjects.values()) {
+			text.set({ visible: !previewMode });
+		}
+		fc.requestRenderAll();
 	});
 
 	$effect(() => {

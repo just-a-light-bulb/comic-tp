@@ -45,7 +45,10 @@
 						<td>
 							<textarea
 								value={region.translatedText}
-								onclick={(event) => event.stopPropagation()}
+								onclick={(event) => {
+									event.stopPropagation();
+									activeRegionId.set(region.id);
+								}}
 								oninput={(event) =>
 									onUpdateRegion(region.id, {
 										translatedText: (event.currentTarget as HTMLTextAreaElement).value
@@ -57,7 +60,10 @@
 							<input
 								type="checkbox"
 								checked={region.isApproved}
-								onclick={(event) => event.stopPropagation()}
+								onclick={(event) => {
+									event.stopPropagation();
+									activeRegionId.set(region.id);
+								}}
 								onchange={(event) =>
 									onUpdateRegion(region.id, {
 										isApproved: (event.currentTarget as HTMLInputElement).checked

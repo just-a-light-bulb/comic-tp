@@ -155,6 +155,7 @@
 			fontWeight: 'normal',
 			textAlign: 'left'
 		};
+		const previousActiveTextId = activeTextId;
 		runCommand({
 			execute: () => {
 				textOverlays = [...textOverlays, newText];
@@ -162,7 +163,7 @@
 			},
 			undo: () => {
 				textOverlays = textOverlays.filter((item) => item.id !== id);
-				if (activeTextId === id) activeTextId = null;
+				activeTextId = previousActiveTextId;
 			}
 		});
 	};
@@ -252,6 +253,12 @@
 	};
 
 	const handleKeyboard = (event: KeyboardEvent): void => {
+		const isInput =
+			event.target instanceof HTMLInputElement ||
+			event.target instanceof HTMLTextAreaElement ||
+			(event.target as HTMLElement)?.isContentEditable;
+		if (isInput) return;
+
 		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
 			event.preventDefault();
 			if (event.shiftKey) return redo();

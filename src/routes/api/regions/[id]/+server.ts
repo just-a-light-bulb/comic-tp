@@ -1,12 +1,23 @@
 import { json } from '@sveltejs/kit';
 import { regions } from '$lib/server/mock/mock-db';
+import type { Region } from '$lib/server/mock/api-schema';
 import type { RequestHandler } from './$types';
+
+const ALLOWED_FIELDS: (keyof Region)[] = ['translatedText', 'isApproved', 'confidence'];
 
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	const id = Number(params.id);
-	const patch = (await request.json()) as Partial<(typeof regions)[number]>;
+	const body = (await request.json()) as Partial<Region>;
 	const region = regions.find((item) => item.id === id);
 	if (!region) return json({ ok: false, error: 'Region not found' }, { status: 404 });
+
+	const patch: Partial<Region> = {};
+	for (const field of ALLOWED_FIELDS) {
+		if (field in body) {
+			(patch as any)[field] = body[field];
+		}
+	}
+
 	Object.assign(region, patch);
 	return json({ ok: true, data: { region } });
 };
