@@ -74,6 +74,8 @@
 	let previewRect = $state<any>(null);
 	let drawingStart = $state<{ x: number; y: number } | null>(null);
 	let copiedObject = $state<any>(null);
+	let renderAllScheduled = $state(false);
+	let isTextEditing = $state(false);
 
 	const exportAsPNG = (filename = 'comic-page.png'): void => {
 		if (!fc) return;
@@ -133,11 +135,11 @@
 		return tones.pending;
 	};
 
-	const setCanvasSize = (imageWidth?: number, imageHeight?: number): void => {
+	const setCanvasSize = (): void => {
 		if (!rootEl || !canvasEl || !fc) return;
 		const dpr = window.devicePixelRatio || 1;
-		const width = imageWidth ?? Math.max(rootEl.clientWidth, 1);
-		const height = imageHeight ?? Math.max(rootEl.clientHeight, 1);
+		const width = Math.max(rootEl.clientWidth, 1);
+		const height = Math.max(rootEl.clientHeight, 1);
 		canvasEl.width = width * dpr;
 		canvasEl.height = height * dpr;
 		canvasEl.style.width = `${width}px`;
@@ -148,15 +150,18 @@
 	const fitToScreen = (): void => {
 		if (!fc?.backgroundImage) return;
 		const bg = fc.backgroundImage;
-		const imageWidth = bg.width ?? 1;
-		const imageHeight = bg.height ?? 1;
+		const imageWidth = (bg.width ?? 1) * (bg.scaleX ?? 1);
+		const imageHeight = (bg.height ?? 1) * (bg.scaleY ?? 1);
 		const canvasWidth = fc.getWidth();
 		const canvasHeight = fc.getHeight();
+		// Fit image to canvas (like standard image viewers)
 		const baseZoom = Math.min(canvasWidth / imageWidth, canvasHeight / imageHeight);
-		currentZoom = baseZoom;
-		const offsetX = (canvasWidth - imageWidth * baseZoom) / 2;
-		const offsetY = (canvasHeight - imageHeight * baseZoom) / 2;
-		fc.setViewportTransform([baseZoom, 0, 0, baseZoom, offsetX, offsetY]);
+		currentZoom = Math.min(baseZoom, 1); // Don't zoom in, only zoom out to fit
+		const offsetX = (canvasWidth - imageWidth * currentZoom) / 2;
+		const offsetY = (canvasHeight - imageHeight * currentZoom) / 2;
+		fc.setViewportTransform([currentZoom, 0, 0, currentZoom, offsetX, offsetY]);
+		// Scale the background image to fit
+		bg.scaleToWidth(imageWidth * currentZoom);
 		updateOverlayScale();
 	};
 
@@ -216,29 +221,73 @@
 
 	const renderTextOverlays = (): void => {
 		if (!fc || !fabricApi) return;
-		for (const object of textObjects.values()) {
-			fc.remove(object);
-		}
-		textObjects.clear();
+
+		// Don't re-render while actively editing text to prevent focus loss
+		if (isTextEditing) return;
+
+		const currentIds = new Set<string>();
+
+		// Update or create text objects incrementally
 		for (const item of textOverlays) {
-			const textbox = new fabricApi.Textbox(item.text, {
-				left: item.x,
-				top: item.y,
-				width: item.width,
-				fontSize: item.fontSize,
-				fill: item.color,
-				fontWeight: item.fontWeight,
-				textAlign: item.textAlign,
-				fontFamily: 'Noto Serif Thai, Roboto, sans-serif',
-				backgroundColor: 'rgba(255,255,255,0.75)',
-				padding: 6,
-				rx: 8,
-				ry: 8,
-				visible: item.visible !== false
-			});
-			textbox.data = { type: 'text', textId: item.id };
-			textObjects.set(item.id, textbox);
-			fc.add(textbox);
+			currentIds.add(item.id);
+			let textbox = textObjects.get(item.id);
+
+			if (textbox) {
+				// Update existing object properties instead of recreating
+				const needsUpdate =
+					textbox.text !== item.text ||
+					textbox.left !== item.x ||
+					textbox.top !== item.y ||
+					textbox.width !== item.width ||
+					textbox.fontSize !== item.fontSize ||
+					textbox.fill !== item.color ||
+					textbox.fontWeight !== item.fontWeight ||
+					textbox.textAlign !== item.textAlign ||
+					textbox.visible !== (item.visible !== false);
+
+				if (needsUpdate) {
+					textbox.set({
+						text: item.text,
+						left: item.x,
+						top: item.y,
+						width: item.width,
+						fontSize: item.fontSize,
+						fill: item.color,
+						fontWeight: item.fontWeight,
+						textAlign: item.textAlign,
+						visible: item.visible !== false
+					});
+					textbox.setCoords();
+				}
+			} else {
+				// Create new text object
+				textbox = new fabricApi.Textbox(item.text, {
+					left: item.x,
+					top: item.y,
+					width: item.width,
+					fontSize: item.fontSize,
+					fill: item.color,
+					fontWeight: item.fontWeight,
+					textAlign: item.textAlign,
+					fontFamily: 'Noto Serif Thai, Roboto, sans-serif',
+					backgroundColor: 'rgba(255,255,255,0.75)',
+					padding: 6,
+					rx: 8,
+					ry: 8,
+					visible: item.visible !== false
+				});
+				textbox.data = { type: 'text', textId: item.id };
+				textObjects.set(item.id, textbox);
+				fc.add(textbox);
+			}
+		}
+
+		// Remove text objects that no longer exist in the data
+		for (const [id, textbox] of textObjects.entries()) {
+			if (!currentIds.has(id)) {
+				fc.remove(textbox);
+				textObjects.delete(id);
+			}
 		}
 	};
 
@@ -511,10 +560,12 @@
 			);
 		});
 		image.set({ left: 0, top: 0, selectable: false, evented: false });
-		fc.setBackgroundImage(image, () => {
-			setCanvasSize(image.width, image.height);
-			fitToScreen();
-			renderAllOverlays();
+		(fc as any).setBackgroundImage(image, {
+			callback: () => {
+				setCanvasSize(image.width, image.height);
+				fitToScreen();
+				renderAllOverlays();
+			}
 		});
 	};
 
@@ -545,6 +596,20 @@
 		fc.on('selection:cleared', () => {
 			activeRegionId.set(null);
 			onActiveTextChange?.(null);
+			isTextEditing = false;
+		});
+		// Track when text enters editing mode (user starts typing)
+		fc.on('text:editing:entered', () => {
+			isTextEditing = true;
+		});
+		// Track when text editing exits
+		fc.on('text:editing:exited', () => {
+			isTextEditing = false;
+			// Sync final text state after editing completes
+			const activeObject = fc.getActiveObject();
+			if (activeObject?.data?.type === 'text') {
+				syncTextUpdate(activeObject);
+			}
 		});
 		fc.on('object:modified', (event: any) => {
 			const target = event.target;
@@ -587,12 +652,14 @@
 				fc.selection = false;
 				return;
 			}
+			// Pan on middle mouse button (button === 1) or when spacebar is held
 			if (opt.e.button === 1 || isSpaceHeld) {
 				isPanning = true;
 				fc.selection = false;
-				const pointer = fc.getPointer(opt.e);
-				lastPanPoint = { x: pointer.x, y: pointer.y };
+				// Record the raw mouse position (not canvas pointer position)
+				lastPanPoint = { x: opt.e.clientX, y: opt.e.clientY };
 				fc.defaultCursor = 'grabbing';
+				opt.e.preventDefault();
 			}
 		});
 		fc.on('mouse:move', (opt: any) => {
@@ -622,11 +689,12 @@
 				return;
 			}
 			if (!isPanning) return;
-			const pointer = fc.getPointer(opt.e);
-			const dx = pointer.x - lastPanPoint.x;
-			const dy = pointer.y - lastPanPoint.y;
-			fc.relativePan({ x: dx, y: dy });
-			lastPanPoint = { x: pointer.x, y: pointer.y };
+			// Calculate delta from raw mouse position (not canvas pointer)
+			const dx = opt.e.clientX - lastPanPoint.x;
+			const dy = opt.e.clientY - lastPanPoint.y;
+			// Use relativePan with negated delta for natural panning direction
+			fc.relativePan({ x: -dx, y: -dy });
+			lastPanPoint = { x: opt.e.clientX, y: opt.e.clientY };
 		});
 		fc.on('mouse:up', (opt: any) => {
 			if (drawingMode && drawingStart) {
@@ -712,7 +780,66 @@
 
 	$effect(() => {
 		if (!fc) return;
-		renderAllOverlays();
+		// Only render region overlays when regions change
+		renderRegionOverlays();
+	});
+
+	$effect(() => {
+		if (!fc || !textOverlays) return;
+		// Render text overlays - don't recreate if just updating text
+		const existingIds = new Set(textObjects.keys());
+		const newIds = new Set(textOverlays.map((t) => t.id));
+
+		// Remove deleted text overlays
+		for (const id of existingIds) {
+			if (!newIds.has(id)) {
+				const obj = textObjects.get(id);
+				if (obj) {
+					fc.remove(obj);
+					textObjects.delete(id);
+				}
+			}
+		}
+
+		// Add or update text overlays
+		for (const item of textOverlays) {
+			const existing = textObjects.get(item.id);
+			if (existing) {
+				// Update existing text object (preserves focus during typing)
+				existing.set({
+					text: item.text,
+					left: item.x,
+					top: item.y,
+					width: item.width,
+					fontSize: item.fontSize,
+					fill: item.color,
+					fontWeight: item.fontWeight,
+					textAlign: item.textAlign,
+					visible: item.visible !== false
+				});
+				existing.setCoords();
+			} else {
+				// Create new text object
+				const textbox = new fabricApi.Textbox(item.text, {
+					left: item.x,
+					top: item.y,
+					width: item.width,
+					fontSize: item.fontSize,
+					fill: item.color,
+					fontWeight: item.fontWeight,
+					textAlign: item.textAlign,
+					fontFamily: 'Noto Serif Thai, Roboto, sans-serif',
+					backgroundColor: 'rgba(255,255,255,0.75)',
+					padding: 6,
+					rx: 8,
+					ry: 8
+				});
+				textbox.data = { type: 'text', textId: item.id };
+				textObjects.set(item.id, textbox);
+				fc.add(textbox);
+			}
+		}
+		fc.requestRenderAll();
 	});
 
 	$effect(() => {
@@ -759,50 +886,9 @@
 	});
 
 	$effect(() => {
-		if (!fc) return;
-		renderAllOverlays();
-	});
-
-	$effect(() => {
-		if (!fc || !imageUrl) return;
-		void loadImage();
-	});
-
-	$effect(() => {
-		if (!fc) return;
-		resetSignal;
-		fitToScreen();
-	});
-
-	$effect(() => {
-		const unsubscribe = activeRegionId.subscribe((id) => {
-			if (!id || suppressCanvasSync) return;
-			suppressCanvasSync = true;
-			centerRegion(id);
-			suppressCanvasSync = false;
-		});
-		return () => unsubscribe();
-	});
-
-	$effect(() => {
-		if (!fc || !rootEl) return;
-		if (drawingMode) {
-			rootEl.style.cursor = 'crosshair';
-			fc.selection = false;
-		} else {
-			rootEl.style.cursor = 'default';
-			fc.selection = true;
-		}
-	});
-
-	$effect(() => {
-		if (!fc) return;
-		for (const group of regionObjects.values()) {
-			group.set({ visible: !previewMode });
-		}
-		for (const text of textObjects.values()) {
-			text.set({ visible: !previewMode });
-		}
+		if (!fc || !fabricApi) return;
+		// Update text overlays incrementally (doesn't recreate objects during editing)
+		renderTextOverlays();
 		fc.requestRenderAll();
 	});
 </script>
