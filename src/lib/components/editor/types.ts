@@ -21,4 +21,5 @@ export interface TextOverlay {
 	color: string;
 	fontWeight: 'normal' | 'bold';
 	textAlign: 'left' | 'center' | 'right';
+	visible?: boolean;
 }

@@ -11,10 +11,16 @@
 		onRedo: () => void;
 		onResetView: () => void;
 		onAddText: () => void;
+		onToggleDrawingMode: () => void;
+		onTogglePreviewMode: () => void;
+		onExportPNG: () => void;
+		onExportPDF: () => void;
 		onUpdateTextStyle: (patch: Partial<TextStyleState>) => void;
 		canUndo: boolean;
 		canRedo: boolean;
 		hasActiveText: boolean;
+		isDrawingMode: boolean;
+		isPreviewMode: boolean;
 		textStyle: () => TextStyleState;
 	}
 
@@ -23,10 +29,16 @@
 		onRedo,
 		onResetView,
 		onAddText,
+		onToggleDrawingMode,
+		onTogglePreviewMode,
+		onExportPNG,
+		onExportPDF,
 		onUpdateTextStyle,
 		canUndo,
 		canRedo,
 		hasActiveText,
+		isDrawingMode,
+		isPreviewMode,
 		textStyle
 	}: Props = $props();
 </script>
@@ -40,8 +52,26 @@
 	<div class="actions">
 		<button type="button" class="secondary" onclick={onAddText}>+ Textbox</button>
 		<button type="button" class="secondary" onclick={onResetView}>Fit</button>
+		<button
+			type="button"
+			class:active={isDrawingMode}
+			onclick={onToggleDrawingMode}
+			title="Draw region (R)"
+		>
+			◻
+		</button>
+		<button
+			type="button"
+			class:active={isPreviewMode}
+			onclick={onTogglePreviewMode}
+			title="Toggle preview mode"
+		>
+			{#if isPreviewMode}👁️{:else}👁{/if}
+		</button>
 		<button type="button" onclick={onUndo} disabled={!canUndo}>Undo</button>
 		<button type="button" onclick={onRedo} disabled={!canRedo}>Redo</button>
+		<button type="button" class="secondary" onclick={onExportPNG}>PNG</button>
+		<button type="button" class="secondary" onclick={onExportPDF}>PDF</button>
 	</div>
 
 	<div class="text-controls" aria-disabled={!hasActiveText}>

@@ -35,6 +35,7 @@ This will narrow and aid you in finding the right docs.
 Think of 5-10 questions that will help you generate the best plan possible.
 
 Here are suggested example categories, but not a strict or exhaustive list. You may ask anything helpful. Use best judgement & prioritize ambiguity and risk reduction:
+
 1. Goals & success criteria
 2. Scope & non‑goals
 3. Users & core workflows
@@ -53,18 +54,23 @@ When the plan involves any external library, API, framework, or service, use the
 ### Phase 3: Create Plan
 
 #### Structure
+
 - **Overview**: Brief summary and approach
 - **Sprints**: Logical phases that build on each other
 - **Tasks**: Specific, actionable items within sprints
 
 #### Sprint Requirements
+
 Each sprint must:
+
 - Result in **demoable, runnable, testable** increment
 - Build on prior sprint work
 - Include demo/verification checklist
 
 #### Task Requirements
+
 Each task must be:
+
 - **Atomic and committable** (small, independent)
 - Specific with clear inputs/outputs
 - Independently testable
@@ -74,20 +80,24 @@ Each task must be:
 
 **Bad:** "Implement Google OAuth"
 **Good:**
+
 - "Add Google OAuth config to env variables"
 - "Install passport-google-oauth20 package"
 - "Create OAuth callback route in src/routes/auth.ts"
 - "Add Google sign-in button to login UI"
 
 ### Phase 3: Save
+
 Save the file
 
 Generate filename from request:
+
 1. Extract keywords
 2. Convert to kebab-case
 3. Add `-plan.md` suffix
 
 Examples:
+
 - "fix xyz bug" → `xyz-bug-plan.md`
 
 ### Phase 4: Gotchas
@@ -107,19 +117,24 @@ Refine the plan if any additional useful info is provided.
 **Estimated Complexity**: [Low/Medium/High]
 
 ## Overview
+
 [Summary of task and approach]
 
 ## Prerequisites
+
 - [Dependencies or requirements]
 - [Tools, libraries, access needed]
 
 ## Sprint 1: [Name]
+
 **Goal**: [What this accomplishes]
 **Demo/Validation**:
+
 - [How to run/demo]
 - [What to verify]
 
 ### Task 1.1: [Name]
+
 - **Location**: [File paths]
 - **Description**: [What to do]
 - **Dependencies**: [Previous tasks]
@@ -129,20 +144,25 @@ Refine the plan if any additional useful info is provided.
   - [Tests or verification]
 
 ### Task 1.2: [Name]
+
 [...]
 
 ## Sprint 2: [Name]
+
 [...]
 
 ## Testing Strategy
+
 - [How to test]
 - [What to verify per sprint]
 
 ## Potential Risks & Gotchas
+
 - [What could go wrong]
 - [Mitigation strategies]
 
 ## Rollback Plan
+
 - [How to undo if needed]
 ```
 

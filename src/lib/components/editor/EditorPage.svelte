@@ -73,6 +73,36 @@
 	let redoCommands = $state<Command[]>([]);
 	let resetSignal = $state(0);
 	let activeTab = $state<'script' | 'layers' | 'settings'>('script');
+	let isDrawingMode = $state(false);
+	let isPreviewMode = $state(false);
+	let renderedImageUrl = $state<string | undefined>(undefined);
+	let exportAsPNG = $state<((filename?: string) => void) | null>(null);
+	let exportAsPDF = $state<((filename?: string) => Promise<void>) | null>(null);
+	let canvasEditorApi = $state<{
+		setLayerVisibility: (textId: string, visible: boolean) => void;
+		bringForward: (textId: string) => void;
+		sendBackward: (textId: string) => void;
+		bringToFront: (textId: string) => void;
+		sendToBack: (textId: string) => void;
+	} | null>(null);
+
+	const handleExportReady = (exportFns: {
+		exportAsPNG: (filename?: string) => void;
+		exportAsPDF: (filename?: string) => Promise<void>;
+	}): void => {
+		exportAsPNG = exportFns.exportAsPNG;
+		exportAsPDF = exportFns.exportAsPDF;
+	};
+
+	const handleCanvasReady = (canvas: {
+		setLayerVisibility: (textId: string, visible: boolean) => void;
+		bringForward: (textId: string) => void;
+		sendBackward: (textId: string) => void;
+		bringToFront: (textId: string) => void;
+		sendToBack: (textId: string) => void;
+	}): void => {
+		canvasEditorApi = canvas;
+	};
 
 	const setRegion = (regionId: string, patch: Partial<TextRegion>): void => {
 		regions = regions.map((region) => (region.id === regionId ? { ...region, ...patch } : region));
@@ -172,6 +202,55 @@
 		resetSignal += 1;
 	};
 
+	const toggleDrawingMode = (): void => {
+		isDrawingMode = !isDrawingMode;
+	};
+
+	const togglePreviewMode = (): void => {
+		isPreviewMode = !isPreviewMode;
+	};
+
+	const toggleLayerVisibility = (textId: string): void => {
+		const item = textOverlays.find((t) => t.id === textId);
+		if (!item) return;
+		const newVisible = !(item.visible ?? true);
+		canvasEditorApi?.setLayerVisibility(textId, newVisible);
+	};
+
+	const enterPreview = async (): Promise<void> => {
+		// TODO: Call API to get rendered image
+		// For now, simulate with a placeholder
+		renderedImageUrl = demoImageUrl;
+	};
+
+	const handleExportPNG = (): void => {
+		exportAsPNG?.();
+	};
+
+	const handleExportPDF = async (): Promise<void> => {
+		await exportAsPDF?.();
+	};
+
+	const handleRegionCreated = (
+		regionData: Omit<
+			TextRegion,
+			'id' | 'bubbleIndex' | 'originalText' | 'translatedText' | 'confidence' | 'isApproved'
+		>
+	): void => {
+		const id = `region-${crypto.randomUUID()}`;
+		const newRegion: TextRegion = {
+			id,
+			bubbleIndex: regions.length + 1,
+			...regionData,
+			originalText: '',
+			translatedText: '',
+			confidence: 100,
+			isApproved: false
+		};
+		regions = [...regions, newRegion];
+		isDrawingMode = false;
+	};
+
 	const handleKeyboard = (event: KeyboardEvent): void => {
 		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
 			event.preventDefault();
@@ -181,6 +260,10 @@
 		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
 			event.preventDefault();
 			redo();
+		}
+		if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) {
+			event.preventDefault();
+			toggleDrawingMode();
 		}
 	};
 </script>
@@ -197,10 +280,16 @@
 		onRedo={redo}
 		onResetView={resetView}
 		onAddText={addTextbox}
+		onToggleDrawingMode={toggleDrawingMode}
+		onTogglePreviewMode={togglePreviewMode}
+		onExportPNG={handleExportPNG}
+		onExportPDF={handleExportPDF}
 		onUpdateTextStyle={updateActiveTextStyle}
 		canUndo={commands.length > 0}
 		canRedo={redoCommands.length > 0}
 		hasActiveText={Boolean(activeTextId)}
+		{isDrawingMode}
+		{isPreviewMode}
 		textStyle={activeTextStyle}
 	/>
 
@@ -221,9 +310,16 @@
 						{regions}
 						{textOverlays}
 						{resetSignal}
+						drawingMode={isDrawingMode}
+						previewMode={isPreviewMode}
+						{renderedImageUrl}
 						onRegionMoved={updateRegion}
+						onRegionCreated={handleRegionCreated}
 						onTextOverlayUpdate={updateTextOverlay}
 						onActiveTextChange={(id) => (activeTextId = id)}
+						onEnterPreview={enterPreview}
+						onExportReady={handleExportReady}
+						onCanvasReady={handleCanvasReady}
 					/>
 				</div>
 			</ResizablePane>
@@ -253,15 +349,29 @@
 						<div class="panel-body">
 							<h2>Text layers</h2>
 							<div class="layer-list">
-								{#each textOverlays as item}
-									<button
-										type="button"
+								{#each textOverlays as item (item.id)}
+									<div
+										class="layer-item"
 										class:layer-active={activeTextId === item.id}
 										onclick={() => (activeTextId = item.id)}
+										onkeydown={(e) => e.key === 'Enter' && (activeTextId = item.id)}
+										role="button"
+										tabindex="0"
 									>
 										<span>{item.text.slice(0, 28)}</span>
 										<small>{item.fontSize}px</small>
-									</button>
+										<button
+											type="button"
+											class="eye-btn"
+											title="Toggle visibility"
+											onclick={(e) => {
+												e.stopPropagation();
+												toggleLayerVisibility(item.id);
+											}}
+										>
+											{#if item.visible !== false}👁{:else}🚫{/if}
+										</button>
+									</div>
 								{/each}
 							</div>
 						</div>
@@ -383,7 +493,7 @@
 		gap: 0.35rem;
 	}
 
-	.layer-list button {
+	.layer-list .layer-item {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -391,13 +501,30 @@
 		border: none;
 		border-radius: 10px;
 		background: #fff;
+		cursor: pointer;
 	}
 
-	.layer-list button.layer-active {
+	.layer-list .layer-item.layer-active {
 		background: #ded1f3;
 	}
 
 	.layer-list small {
 		color: #6f6a74;
+	}
+
+	.eye-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.25rem 0.5rem;
+		border: none;
+		border-radius: 6px;
+		background: #e8def8;
+		font-size: 0.9rem;
+		cursor: pointer;
+	}
+
+	.eye-btn:hover {
+		background: #6750a4;
 	}
 </style>
