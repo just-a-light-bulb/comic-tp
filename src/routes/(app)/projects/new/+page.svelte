@@ -2,12 +2,12 @@
 	<title>Create project</title>
 </svelte:head>
 
-<main class="md3-page">
-	<section class="md3-content">
-		<div class="md3-surface">
-			<h1 class="md3-title">Create project</h1>
-			<p class="md3-subtitle">Define source/target language and translation style presets.</p>
-			<form class="md3-form">
+<main class="manga-page">
+	<section class="manga-content">
+		<div class="panel-frame">
+			<h1 class="manga-title">Create project</h1>
+			<p class="manga-subtitle">Define source/target language and translation style presets.</p>
+			<form class="manga-form">
 				<label>
 					Title
 					<input placeholder="Project title" />
@@ -24,7 +24,7 @@
 					Translation style
 					<select><option>Natural</option><option>Formal</option><option>Literal</option></select>
 				</label>
-				<button class="md3-button" type="button">Create project</button>
+				<button class="btn-primary" type="button">Create project</button>
 			</form>
 		</div>
 	</section>

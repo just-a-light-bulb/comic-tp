@@ -6,11 +6,11 @@
 	<title>Edit project</title>
 </svelte:head>
 
-<main class="md3-page">
-	<section class="md3-content">
-		<div class="md3-surface">
-			<h1 class="md3-title">Edit project #{params.pid}</h1>
-			<form class="md3-form">
+<main class="manga-page">
+	<section class="manga-content">
+		<div class="panel-frame">
+			<h1 class="manga-title">Edit project #{params.pid}</h1>
+			<form class="manga-form">
 				<label>
 					Title
 					<input value={`Project ${params.pid}`} />
@@ -23,7 +23,7 @@
 					Character glossary
 					<input type="file" />
 				</label>
-				<button class="md3-button" type="button">Save project</button>
+				<button class="btn-primary" type="button">Save project</button>
 			</form>
 		</div>
 	</section>

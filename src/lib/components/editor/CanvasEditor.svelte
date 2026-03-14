@@ -124,9 +124,9 @@
 	const zoomMin = 0.1;
 	const zoomMax = 5;
 	const tones = {
-		approved: '#2e7d32',
-		pending: '#6750a4',
-		low: '#b3261e'
+		approved: '#22c55e',
+		pending: '#f59e0b',
+		low: '#c0392b'
 	};
 
 	const getTone = (region: TextRegion): string => {
@@ -910,8 +910,9 @@
 		height: 100%;
 		width: 100%;
 		overflow: hidden;
-		background: #f3edf7;
-		border-radius: 16px;
+		background: var(--panel-light);
+		border: 2px solid var(--border-line);
+		border-radius: 0;
 		position: relative;
 	}
 
@@ -926,7 +927,7 @@
 		height: 100%;
 		object-fit: contain;
 		pointer-events: none;
-		border-radius: 16px;
+		border-radius: 0;
 	}
 
 	.preview-enter-btn {
@@ -934,12 +935,27 @@
 		bottom: 1rem;
 		right: 1rem;
 		padding: 0.5rem 1rem;
-		background: #6750a4;
+		background: var(--ink-black);
 		color: #fff;
 		border: none;
-		border-radius: 999px;
+		border-radius: 0;
 		font-size: 0.85rem;
+		font-family: 'DM Mono', monospace;
 		font-weight: 600;
 		cursor: pointer;
+		box-shadow: 3px 3px 0 var(--panel-red);
+		transition:
+			box-shadow 80ms ease,
+			transform 80ms ease;
+	}
+
+	.preview-enter-btn:hover {
+		box-shadow: 1px 1px 0 var(--panel-red);
+		transform: translate(2px, 2px);
+	}
+
+	.preview-enter-btn:active {
+		box-shadow: 0 0 0 var(--panel-red);
+		transform: translate(3px, 3px);
 	}
 </style>

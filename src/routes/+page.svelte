@@ -2,37 +2,37 @@
 	<title>Comic Trans Studio</title>
 </svelte:head>
 
-<main class="md3-page">
-	<section class="md3-content">
-		<header class="md3-surface md3-header">
+<main class="manga-page">
+	<section class="manga-content">
+		<header class="manga-header">
 			<div>
-				<h1 class="md3-title">Comic Trans Studio</h1>
-				<p class="md3-subtitle">
+				<h1 class="manga-title">Comic Trans Studio</h1>
+				<p class="manga-subtitle">
 					A unified platform for OCR, AI translation, and visual manga editing workflows.
 				</p>
 			</div>
-			<div class="md3-actions">
-				<a class="md3-link-button" href="/projects">Open projects</a>
-				<a class="md3-chip" href="/login">Sign in</a>
+			<div class="manga-actions">
+				<a class="btn-primary" href="/projects">Open projects</a>
+				<a class="btn-secondary" href="/login">Sign in</a>
 			</div>
 		</header>
 
-		<section class="md3-grid">
-			<article class="md3-card">
+		<section class="manga-grid">
+			<article class="manga-card">
 				<strong>Project workspace</strong>
-				<span class="md3-metric">Create projects, chapters, and page queues.</span>
+				<span>Create projects, chapters, and page queues.</span>
 			</article>
-			<article class="md3-card">
+			<article class="manga-card">
 				<strong>AI translation flow</strong>
-				<span class="md3-metric">Vision, character metadata, and Thai translation jobs.</span>
+				<span>Vision, character metadata, and Thai translation jobs.</span>
 			</article>
-			<article class="md3-card">
+			<article class="manga-card">
 				<strong>Pro canvas editor</strong>
-				<span class="md3-metric">Move regions, style text overlays, and approve content.</span>
+				<span>Move regions, style text overlays, and approve content.</span>
 			</article>
-			<article class="md3-card">
+			<article class="manga-card">
 				<strong>Render & export</strong>
-				<span class="md3-metric">Preview final pages and package chapter outputs.</span>
+				<span>Preview final pages and package chapter outputs.</span>
 			</article>
 		</section>
 	</section>

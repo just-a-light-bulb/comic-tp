@@ -123,22 +123,7 @@ canvasEl.width = containerW * dpr; canvasEl.style.width = containerW + 'px';
 ---
 
 ## DESIGN SYSTEM (manga "Ink on Paper" theme)
-
-```css
-/* Core tokens */
---ink-black: #1A1A2E; --panel-red: #C0392B; --cream-paper: #FDF6E3;
---screen-blue: #4A90D9; --manga-navy: #2C2C54; --border-line: #E8E0D5;
-
-/* Rules that devs forget */
-border-radius: 0 on ALL panels and primary buttons (intentional — no rounding)
-box-shadow: 3px 3px 0 var(--panel-red) on buttons; shrinks to 1px 1px on hover
-body halftone: radial-gradient(circle, var(--tone-gray) 1px, transparent 1px) 12px 12px
-
-/* Fonts (Google Fonts + display=swap) */
-Display: Shippori Mincho B1 | Headings: Cormorant Garamond Bold
-Body: Noto Serif + Noto Serif Thai (load Thai explicitly — breaks without it)
-UI/Mono: DM Mono (badges, confidence scores, kbd hints)
-```
+ref: design_docs
 
 ---
 

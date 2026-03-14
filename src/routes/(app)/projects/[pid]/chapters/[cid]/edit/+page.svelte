@@ -6,11 +6,11 @@
 	<title>Edit chapter</title>
 </svelte:head>
 
-<main class="md3-page">
-	<section class="md3-content">
-		<div class="md3-surface">
-			<h1 class="md3-title">Edit chapter #{params.cid}</h1>
-			<form class="md3-form">
+<main class="manga-page">
+	<section class="manga-content">
+		<div class="panel-frame">
+			<h1 class="manga-title">Edit chapter #{params.cid}</h1>
+			<form class="manga-form">
 				<label>
 					Title
 					<input value={`Chapter ${params.cid}`} />
@@ -19,9 +19,9 @@
 					Reorder pages
 					<input placeholder="1,2,3" />
 				</label>
-				<div class="md3-actions">
-					<button class="md3-button" type="button">Save chapter</button>
-					<button class="md3-chip" type="button">Delete chapter</button>
+				<div class="manga-actions">
+					<button class="btn-primary" type="button">Save chapter</button>
+					<button class="btn-secondary" type="button">Delete chapter</button>
 				</div>
 			</form>
 		</div>

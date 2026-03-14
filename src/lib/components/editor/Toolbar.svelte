@@ -144,21 +144,25 @@
 		gap: 0.8rem;
 		align-items: center;
 		padding: 0.9rem 1rem;
-		border-radius: 24px;
-		background: #f3edf7;
-		border: 1px solid rgb(121 116 126 / 24%);
+		border-radius: 0;
+		background: var(--manga-navy);
+		border: 2px solid var(--border-line);
 	}
 
 	.brand p {
 		margin: 0;
 		font-size: 0.72rem;
-		color: #49454f;
+		color: var(--tone-gray);
 		text-transform: uppercase;
+		font-family: 'DM Mono', monospace;
+		letter-spacing: 0.1em;
 	}
 
 	.brand h1 {
 		margin: 0.2rem 0 0;
 		font-size: 1.05rem;
+		color: var(--cream-paper);
+		font-family: 'Shippori Mincho B1', serif;
 	}
 
 	.actions {
@@ -173,8 +177,9 @@
 		align-items: center;
 		gap: 0.45rem;
 		padding: 0.45rem 0.6rem;
-		border-radius: 999px;
-		background: #e8def8;
+		border-radius: 0;
+		background: var(--panel-light);
+		border: 2px solid var(--border-line);
 	}
 
 	.text-controls[aria-disabled='true'] {
@@ -186,6 +191,8 @@
 		align-items: center;
 		gap: 0.35rem;
 		font-size: 0.75rem;
+		color: var(--ink-black);
+		font-family: 'DM Mono', monospace;
 	}
 
 	input[type='range'] {
@@ -195,24 +202,53 @@
 	input[type='color'] {
 		height: 28px;
 		width: 28px;
-		border: none;
+		border: 2px solid var(--border-line);
 		padding: 0;
 		background: transparent;
+		border-radius: 0;
 	}
 
 	button {
 		border: none;
-		border-radius: 999px;
+		border-radius: 0;
 		padding: 0.4rem 0.75rem;
 		font-size: 0.78rem;
 		font-weight: 600;
-		background: #6750a4;
+		background: var(--panel-red);
 		color: #fff;
+		font-family: 'DM Mono', monospace;
+		cursor: pointer;
+		box-shadow: 3px 3px 0 var(--ink-black);
+		transition:
+			box-shadow 80ms ease,
+			transform 80ms ease;
+	}
+
+	button:hover {
+		box-shadow: 1px 1px 0 var(--ink-black);
+		transform: translate(2px, 2px);
+	}
+
+	button:active {
+		box-shadow: 0 0 0 var(--ink-black);
+		transform: translate(3px, 3px);
 	}
 
 	button.secondary {
-		background: #e8def8;
-		color: #1d192b;
+		background: var(--panel-light);
+		color: var(--ink-black);
+		border: 2px solid var(--border-line);
+		box-shadow: 3px 3px 0 var(--panel-red);
+	}
+
+	button.secondary:hover {
+		box-shadow: 1px 1px 0 var(--panel-red);
+		transform: translate(2px, 2px);
+	}
+
+	button.secondary:active {
+		box-shadow: 0 0 0 var(--panel-red);
+		transform: translate(3px, 3px);
 	}
 
 	.align {
@@ -222,17 +258,25 @@
 
 	.align button,
 	.text-controls > button {
-		background: #fff;
-		color: #1d192b;
+		background: var(--cream-paper);
+		color: var(--ink-black);
+		box-shadow: 2px 2px 0 var(--tone-gray);
 	}
 
 	button.active {
-		background: #6750a4;
-		color: #fff;
+		background: var(--gold-tone);
+		color: var(--ink-black);
+		box-shadow: 2px 2px 0 var(--panel-red);
 	}
 
 	button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+		box-shadow: none;
+	}
+
+	button:disabled:hover {
+		transform: none;
+		box-shadow: none;
 	}
 </style>

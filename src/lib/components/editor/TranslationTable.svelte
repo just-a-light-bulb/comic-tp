@@ -82,17 +82,20 @@
 		height: 100%;
 		display: grid;
 		grid-template-rows: auto 1fr;
-		border-radius: 16px;
+		border-radius: 0;
 		overflow: hidden;
-		background: #f3edf7;
+		background: var(--panel-light);
+		border: 2px solid var(--border-line);
 	}
 
 	.table-head {
 		display: flex;
 		justify-content: space-between;
 		padding: 0.75rem 0.9rem;
-		background: #e8def8;
-		color: #1d192b;
+		background: var(--manga-navy);
+		color: var(--cream-paper);
+		font-family: 'Shippori Mincho B1', serif;
+		font-size: 0.95rem;
 	}
 
 	.table-scroll {
@@ -108,7 +111,7 @@
 	th,
 	td {
 		padding: 0.6rem;
-		border-bottom: 1px solid rgb(121 116 126 / 24%);
+		border-bottom: 1px solid var(--border-line);
 		font-size: 0.85rem;
 		vertical-align: top;
 	}
@@ -116,9 +119,13 @@
 	th {
 		position: sticky;
 		top: 0;
-		background: #f8f2fb;
-		color: #49454f;
+		background: var(--panel-light);
+		color: var(--ink-muted);
 		text-align: start;
+		font-family: 'DM Mono', monospace;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	tr {
@@ -126,30 +133,42 @@
 	}
 
 	tr.selected {
-		background: rgb(103 80 164 / 14%);
+		background: rgba(192, 57, 43, 0.15);
+		border-left: 3px solid var(--panel-red);
+	}
+
+	tr:nth-child(even) {
+		background: var(--cream-paper);
+	}
+
+	tr:hover {
+		background: rgba(212, 168, 83, 0.1);
 	}
 
 	textarea {
 		width: 100%;
 		min-height: 5rem;
-		background: #e7e0ec;
-		border: none;
-		border-bottom: 2px solid #79747e;
-		border-radius: 14px 14px 0 0;
+		background: var(--cream-paper);
+		border: 2px solid var(--border-line);
+		border-radius: 0;
 		padding: 0.55rem;
 		font: inherit;
+		font-family: 'Noto Serif', 'Noto Serif Thai', serif;
 	}
 
 	textarea:focus-visible {
-		outline: 2px solid #6750a4;
+		outline: 2px solid var(--panel-red);
 		outline-offset: 2px;
+		border-color: var(--panel-red);
 	}
 
 	.chip {
 		display: inline-flex;
 		padding: 0.2rem 0.55rem;
-		border-radius: 999px;
-		background: #e8def8;
-		font-weight: 600;
+		border-radius: 0;
+		background: var(--manga-navy);
+		color: var(--cream-paper);
+		font-family: 'DM Mono', monospace;
+		font-size: 0.75rem;
 	}
 </style>
