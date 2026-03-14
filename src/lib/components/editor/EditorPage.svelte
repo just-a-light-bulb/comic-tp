@@ -1,0 +1,586 @@
+<script lang="ts">
+	import CanvasEditor from '$lib/components/editor/CanvasEditor.svelte';
+	import Toolbar from '$lib/components/editor/Toolbar.svelte';
+	import TranslationTable from '$lib/components/editor/TranslationTable.svelte';
+	import type { TextOverlay, TextRegion } from '$lib/components/editor/types';
+	import { ResizableHandle, ResizablePane, ResizablePaneGroup } from '$lib/components/ui/resizable';
+
+	interface Command {
+		execute: () => void;
+		undo: () => void;
+	}
+
+	const demoImageUrl =
+		'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?auto=format&fit=crop&w=1300&q=80';
+
+	const starterRegions: TextRegion[] = [
+		{
+			id: 'region-1',
+			bubbleIndex: 1,
+			bboxX: 180,
+			bboxY: 220,
+			bboxW: 280,
+			bboxH: 220,
+			originalText: '今日はやるしかない。',
+			translatedText: 'วันนี้ต้องลุยให้ได้',
+			confidence: 92,
+			isApproved: true
+		},
+		{
+			id: 'region-2',
+			bubbleIndex: 2,
+			bboxX: 640,
+			bboxY: 240,
+			bboxW: 240,
+			bboxH: 170,
+			originalText: '待って！まだ準備が…',
+			translatedText: 'เดี๋ยวก่อน! ยังไม่พร้อม...',
+			confidence: 74,
+			isApproved: false
+		},
+		{
+			id: 'region-3',
+			bubbleIndex: 3,
+			bboxX: 360,
+			bboxY: 760,
+			bboxW: 320,
+			bboxH: 210,
+			originalText: '信じて、私についてきて。',
+			translatedText: 'เชื่อฉัน แล้วตามมา',
+			confidence: 56,
+			isApproved: false
+		}
+	];
+
+	const starterTexts: TextOverlay[] = [
+		{
+			id: 'text-1',
+			text: 'Hello there! be born a while.',
+			x: 196,
+			y: 238,
+			width: 220,
+			fontSize: 26,
+			color: '#321f4f',
+			fontWeight: 'bold',
+			textAlign: 'center'
+		}
+	];
+
+	let regions = $state<TextRegion[]>(starterRegions);
+	let textOverlays = $state<TextOverlay[]>(starterTexts);
+	let activeTextId = $state<string | null>(starterTexts[0]?.id ?? null);
+	let commands = $state<Command[]>([]);
+	let redoCommands = $state<Command[]>([]);
+	let resetSignal = $state(0);
+	let activeTab = $state<'script' | 'layers' | 'settings'>('script');
+	let isDrawingMode = $state(false);
+	let isPreviewMode = $state(false);
+	let renderedImageUrl = $state<string | undefined>(undefined);
+	let exportAsPNG = $state<((filename?: string) => void) | null>(null);
+	let exportAsPDF = $state<((filename?: string) => Promise<void>) | null>(null);
+	let canvasEditorApi = $state<{
+		setLayerVisibility: (textId: string, visible: boolean) => void;
+		bringForward: (textId: string) => void;
+		sendBackward: (textId: string) => void;
+		bringToFront: (textId: string) => void;
+		sendToBack: (textId: string) => void;
+	} | null>(null);
+
+	const handleExportReady = (exportFns: {
+		exportAsPNG: (filename?: string) => void;
+		exportAsPDF: (filename?: string) => Promise<void>;
+	}): void => {
+		exportAsPNG = exportFns.exportAsPNG;
+		exportAsPDF = exportFns.exportAsPDF;
+	};
+
+	const handleCanvasReady = (canvas: {
+		setLayerVisibility: (textId: string, visible: boolean) => void;
+		bringForward: (textId: string) => void;
+		sendBackward: (textId: string) => void;
+		bringToFront: (textId: string) => void;
+		sendToBack: (textId: string) => void;
+	}): void => {
+		canvasEditorApi = canvas;
+	};
+
+	const setRegion = (regionId: string, patch: Partial<TextRegion>): void => {
+		regions = regions.map((region) => (region.id === regionId ? { ...region, ...patch } : region));
+	};
+
+	const setTextOverlay = (textId: string, patch: Partial<TextOverlay>): void => {
+		textOverlays = textOverlays.map((item) => (item.id === textId ? { ...item, ...patch } : item));
+	};
+
+	const runCommand = (command: Command): void => {
+		command.execute();
+		commands = [...commands, command];
+		redoCommands = [];
+	};
+
+	const updateRegion = (regionId: string, patch: Partial<TextRegion>): void => {
+		const current = regions.find((region) => region.id === regionId);
+		if (!current) return;
+		const previous = Object.fromEntries(
+			Object.keys(patch).map((key) => [key, current[key as keyof TextRegion]])
+		) as Partial<TextRegion>;
+		runCommand({
+			execute: () => setRegion(regionId, patch),
+			undo: () => setRegion(regionId, previous)
+		});
+	};
+
+	const updateTextOverlay = (textId: string, patch: Partial<TextOverlay>): void => {
+		const current = textOverlays.find((item) => item.id === textId);
+		if (!current) return;
+		const previous = Object.fromEntries(
+			Object.keys(patch).map((key) => [key, current[key as keyof TextOverlay]])
+		) as Partial<TextOverlay>;
+		runCommand({
+			execute: () => setTextOverlay(textId, patch),
+			undo: () => setTextOverlay(textId, previous)
+		});
+	};
+
+	const addTextbox = (): void => {
+		const id = `text-${crypto.randomUUID()}`;
+		const newText: TextOverlay = {
+			id,
+			text: 'Type subtitle...',
+			x: 220,
+			y: 220,
+			width: 260,
+			fontSize: 28,
+			color: '#1d192b',
+			fontWeight: 'normal',
+			textAlign: 'left'
+		};
+		const previousActiveTextId = activeTextId;
+		runCommand({
+			execute: () => {
+				textOverlays = [...textOverlays, newText];
+				activeTextId = id;
+			},
+			undo: () => {
+				textOverlays = textOverlays.filter((item) => item.id !== id);
+				activeTextId = previousActiveTextId;
+			}
+		});
+	};
+
+	const activeTextStyle = $derived(() => {
+		const active = textOverlays.find((item) => item.id === activeTextId);
+		return {
+			fontSize: active?.fontSize ?? 26,
+			color: active?.color ?? '#1d192b',
+			fontWeight: active?.fontWeight ?? 'normal',
+			textAlign: active?.textAlign ?? 'left'
+		};
+	});
+
+	const updateActiveTextStyle = (patch: Partial<typeof activeTextStyle>): void => {
+		if (!activeTextId) return;
+		updateTextOverlay(activeTextId, patch);
+	};
+
+	const undo = (): void => {
+		const command = commands.at(-1);
+		if (!command) return;
+		command.undo();
+		commands = commands.slice(0, -1);
+		redoCommands = [...redoCommands, command];
+	};
+
+	const redo = (): void => {
+		const command = redoCommands.at(-1);
+		if (!command) return;
+		command.execute();
+		redoCommands = redoCommands.slice(0, -1);
+		commands = [...commands, command];
+	};
+
+	const resetView = (): void => {
+		resetSignal += 1;
+	};
+
+	const toggleDrawingMode = (): void => {
+		isDrawingMode = !isDrawingMode;
+	};
+
+	const togglePreviewMode = (): void => {
+		isPreviewMode = !isPreviewMode;
+	};
+
+	const toggleLayerVisibility = (textId: string): void => {
+		const item = textOverlays.find((t) => t.id === textId);
+		if (!item) return;
+		const newVisible = !(item.visible ?? true);
+		canvasEditorApi?.setLayerVisibility(textId, newVisible);
+	};
+
+	const enterPreview = async (): Promise<void> => {
+		// TODO: Call API to get rendered image
+		// For now, simulate with a placeholder
+		renderedImageUrl = demoImageUrl;
+	};
+
+	const handleExportPNG = (): void => {
+		exportAsPNG?.();
+	};
+
+	const handleExportPDF = async (): Promise<void> => {
+		await exportAsPDF?.();
+	};
+
+	const handleRegionCreated = (
+		regionData: Omit<
+			TextRegion,
+			'id' | 'bubbleIndex' | 'originalText' | 'translatedText' | 'confidence' | 'isApproved'
+		>
+	): void => {
+		const id = `region-${crypto.randomUUID()}`;
+		const newRegion: TextRegion = {
+			id,
+			bubbleIndex: regions.length + 1,
+			...regionData,
+			originalText: '',
+			translatedText: '',
+			confidence: 100,
+			isApproved: false
+		};
+		regions = [...regions, newRegion];
+		isDrawingMode = false;
+	};
+
+	const handleKeyboard = (event: KeyboardEvent): void => {
+		const isInput =
+			event.target instanceof HTMLInputElement ||
+			event.target instanceof HTMLTextAreaElement ||
+			(event.target as HTMLElement)?.isContentEditable;
+		if (isInput) return;
+
+		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+			event.preventDefault();
+			if (event.shiftKey) return redo();
+			undo();
+		}
+		if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+			event.preventDefault();
+			redo();
+		}
+		if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.metaKey) {
+			event.preventDefault();
+			toggleDrawingMode();
+		}
+	};
+</script>
+
+<svelte:head>
+	<title>Comic Trans Studio | Pro Canvas Mode</title>
+</svelte:head>
+
+<svelte:window onkeydown={handleKeyboard} />
+
+<main class="editor-page">
+	<Toolbar
+		onUndo={undo}
+		onRedo={redo}
+		onResetView={resetView}
+		onAddText={addTextbox}
+		onToggleDrawingMode={toggleDrawingMode}
+		onTogglePreviewMode={togglePreviewMode}
+		onExportPNG={handleExportPNG}
+		onExportPDF={handleExportPDF}
+		onUpdateTextStyle={updateActiveTextStyle}
+		canUndo={commands.length > 0}
+		canRedo={redoCommands.length > 0}
+		hasActiveText={Boolean(activeTextId)}
+		{isDrawingMode}
+		{isPreviewMode}
+		textStyle={activeTextStyle}
+	/>
+
+	<section class="workspace">
+		<aside class="tool-rail" aria-label="Editor tools">
+			<button class="active" type="button">✎</button>
+			<button type="button">⊕</button>
+			<button type="button">T</button>
+			<button type="button">◻</button>
+			<button type="button">🖱</button>
+		</aside>
+
+		<ResizablePaneGroup direction="horizontal" class="pane-group">
+			<ResizablePane defaultSize={60} minSize={36}>
+				<div class="pane canvas-pane">
+					<CanvasEditor
+						imageUrl={demoImageUrl}
+						{regions}
+						{textOverlays}
+						{resetSignal}
+						drawingMode={isDrawingMode}
+						previewMode={isPreviewMode}
+						{renderedImageUrl}
+						onRegionMoved={updateRegion}
+						onRegionCreated={handleRegionCreated}
+						onTextOverlayUpdate={updateTextOverlay}
+						onActiveTextChange={(id) => (activeTextId = id)}
+						onEnterPreview={enterPreview}
+						onExportReady={handleExportReady}
+						onCanvasReady={handleCanvasReady}
+					/>
+				</div>
+			</ResizablePane>
+			<ResizableHandle withHandle class="splitter" />
+			<ResizablePane defaultSize={40} minSize={28}>
+				<div class="pane side-pane">
+					<div class="tabs">
+						<button
+							type="button"
+							class:active={activeTab === 'script'}
+							onclick={() => (activeTab = 'script')}>Script</button
+						>
+						<button
+							type="button"
+							class:active={activeTab === 'layers'}
+							onclick={() => (activeTab = 'layers')}>Layers</button
+						>
+						<button
+							type="button"
+							class:active={activeTab === 'settings'}
+							onclick={() => (activeTab = 'settings')}>Settings</button
+						>
+					</div>
+					{#if activeTab === 'script'}
+						<TranslationTable {regions} onUpdateRegion={updateRegion} />
+					{:else if activeTab === 'layers'}
+						<div class="panel-body">
+							<h2>Text layers</h2>
+							<div class="layer-list">
+								{#each textOverlays as item (item.id)}
+									<div
+										class="layer-item"
+										class:layer-active={activeTextId === item.id}
+										onclick={() => (activeTextId = item.id)}
+										onkeydown={(e) => e.key === 'Enter' && (activeTextId = item.id)}
+										role="button"
+										tabindex="0"
+									>
+										<span>{item.text.slice(0, 28)}</span>
+										<small>{item.fontSize}px</small>
+										<button
+											type="button"
+											class="eye-btn"
+											title="Toggle visibility"
+											onclick={(e) => {
+												e.stopPropagation();
+												toggleLayerVisibility(item.id);
+											}}
+										>
+											{#if item.visible !== false}👁{:else}🚫{/if}
+										</button>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{:else}
+						<div class="panel-body">
+							<h2>Editor guide</h2>
+							<p>Use <strong>Script</strong> to edit translations and approvals.</p>
+							<p>
+								Select any textbox on canvas, then use toolbar controls for font, color, weight, and
+								alignment.
+							</p>
+							<p>Drag regions to adjust bubble areas before final rendering.</p>
+						</div>
+					{/if}
+				</div>
+			</ResizablePane>
+		</ResizablePaneGroup>
+	</section>
+</main>
+
+<style>
+	.editor-page {
+		display: grid;
+		grid-template-rows: auto 1fr;
+		gap: 0.75rem;
+		height: 100dvh;
+		padding: 0.85rem;
+		background: var(--cream-paper);
+	}
+
+	.workspace {
+		display: grid;
+		grid-template-columns: 46px 1fr;
+		gap: 0.65rem;
+		min-height: 0;
+	}
+
+	.tool-rail {
+		display: grid;
+		gap: 0.35rem;
+		align-content: start;
+		padding: 0.45rem;
+		border-radius: 0;
+		background: var(--manga-navy);
+		border: 2px solid var(--border-line);
+	}
+
+	.tool-rail button {
+		aspect-ratio: 1;
+		border: none;
+		border-radius: 0;
+		background: var(--panel-light);
+		color: var(--ink-black);
+		font-family: 'DM Mono', monospace;
+		font-size: 1rem;
+		cursor: pointer;
+		box-shadow: 2px 2px 0 var(--tone-gray);
+		transition:
+			box-shadow 80ms ease,
+			transform 80ms ease;
+	}
+
+	.tool-rail button:hover {
+		box-shadow: 1px 1px 0 var(--tone-gray);
+		transform: translate(1px, 1px);
+	}
+
+	.tool-rail button.active {
+		background: var(--panel-red);
+		color: #fff;
+		box-shadow: 2px 2px 0 var(--ink-black);
+	}
+
+	.pane {
+		height: 100%;
+		padding: 0.45rem;
+		border-radius: 0;
+		background: var(--panel-light);
+		border: 2px solid var(--border-line);
+	}
+
+	.canvas-pane,
+	.side-pane {
+		min-height: 0;
+	}
+
+	.side-pane {
+		display: grid;
+		grid-template-rows: auto 1fr;
+		gap: 0.45rem;
+	}
+
+	.tabs {
+		display: flex;
+		gap: 0;
+		border: 2px solid var(--border-line);
+	}
+
+	.tabs button {
+		border: none;
+		border-radius: 0;
+		padding: 0.5rem 1rem;
+		background: var(--cream-paper);
+		font-size: 0.76rem;
+		font-weight: 600;
+		font-family: 'DM Mono', monospace;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--ink-muted);
+		cursor: pointer;
+		border-right: 2px solid var(--border-line);
+	}
+
+	.tabs button:last-child {
+		border-right: none;
+	}
+
+	.tabs button.active {
+		background: var(--manga-navy);
+		color: var(--cream-paper);
+	}
+
+	.tabs button:hover:not(.active) {
+		background: var(--tone-gray);
+	}
+
+	.panel-body {
+		height: 100%;
+		overflow: auto;
+		border-radius: 0;
+		background: var(--cream-paper);
+		border: 2px solid var(--border-line);
+		padding: 0.75rem;
+	}
+
+	.panel-body h2 {
+		margin: 0 0 0.6rem;
+		font-size: 1rem;
+		font-family: 'Shippori Mincho B1', serif;
+		color: var(--ink-black);
+	}
+
+	.panel-body p {
+		margin: 0 0 0.55rem;
+		font-size: 0.85rem;
+		color: var(--ink-muted);
+		line-height: 1.5;
+	}
+
+	.layer-list {
+		display: grid;
+		gap: 0.35rem;
+	}
+
+	.layer-list .layer-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem;
+		border: none;
+		border-radius: 0;
+		background: var(--panel-light);
+		border: 2px solid var(--border-line);
+		cursor: pointer;
+		font-family: 'Noto Serif', 'Noto Serif Thai', serif;
+		transition:
+			box-shadow 80ms ease,
+			transform 80ms ease;
+	}
+
+	.layer-list .layer-item:hover {
+		box-shadow: 2px 2px 0 var(--tone-gray);
+		transform: translate(-1px, -1px);
+	}
+
+	.layer-list .layer-item.layer-active {
+		background: var(--cream-paper);
+		border-color: var(--panel-red);
+		border-left-width: 3px;
+	}
+
+	.layer-list small {
+		color: var(--ink-muted);
+		font-family: 'DM Mono', monospace;
+		font-size: 0.7rem;
+	}
+
+	.eye-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.25rem 0.5rem;
+		border: none;
+		border-radius: 0;
+		background: var(--tone-gray);
+		font-size: 0.9rem;
+		cursor: pointer;
+		box-shadow: 1px 1px 0 var(--ink-muted);
+	}
+
+	.eye-btn:hover {
+		background: var(--panel-red);
+		color: #fff;
+	}
+</style>

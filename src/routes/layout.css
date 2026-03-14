@@ -1,121 +1,314 @@
-@import "tailwindcss";
-
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+	--ink-black: #1a1a2e;
+	--panel-red: #c0392b;
+	--cream-paper: #fdf6e3;
+	--screen-blue: #4a90d9;
+	--gold-tone: #d4a853;
+	--manga-navy: #2c2c54;
+	--panel-light: #fff8f0;
+	--tone-gray: #c8b8a2;
+	--ink-muted: #8b8680;
+	--border-line: #e8e0d5;
+	--unit: 4px;
 }
 
-.dark {
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.923 0.003 48.717);
-  --primary-foreground: oklch(0.216 0.006 56.043);
-  --secondary: oklch(0.268 0.007 34.298);
-  --secondary-foreground: oklch(0.985 0.001 106.423);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.553 0.013 58.071);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+* {
+	box-sizing: border-box;
 }
 
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+body {
+	margin: 0;
+	font-family: 'Noto Serif', 'Noto Serif Thai', serif;
+	background-color: var(--cream-paper);
+	background-image: radial-gradient(circle, var(--tone-gray) 1px, transparent 1px);
+	background-size: 12px 12px;
+	color: var(--ink-black);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'Shippori Mincho B1', serif;
+	font-weight: 400;
+}
+
+.speed-divider {
+	height: 2px;
+	background: repeating-linear-gradient(
+		-60deg,
+		var(--ink-black) 0px,
+		var(--ink-black) 2px,
+		transparent 2px,
+		transparent 8px
+	);
+	opacity: 0.15;
+	margin: 16px 0;
+}
+
+.panel-frame {
+	border: 2px solid var(--border-line);
+	box-shadow: 2px 4px 0 rgba(26, 26, 46, 0.08);
+	background: var(--cream-paper);
+	border-radius: 0;
+	position: relative;
+}
+
+.panel-frame--active {
+	border-left: 4px solid var(--panel-red);
+}
+
+.btn-primary {
+	background: var(--ink-black);
+	color: white;
+	border: none;
+	border-radius: 0;
+	padding: 10px 24px;
+	font-family: 'DM Mono', monospace;
+	font-size: 13px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	box-shadow: 3px 3px 0 var(--panel-red);
+	cursor: pointer;
+	transition:
+		box-shadow 80ms ease,
+		transform 80ms ease;
+}
+
+.btn-primary:hover {
+	box-shadow: 1px 1px 0 var(--panel-red);
+	transform: translate(2px, 2px);
+}
+
+.btn-primary:active {
+	box-shadow: 0 0 0 var(--panel-red);
+	transform: translate(3px, 3px);
+}
+
+.bubble-badge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 50vh;
+	font-family: 'DM Mono', monospace;
+	font-size: 11px;
+	color: white;
+	position: relative;
+}
+
+.bubble-badge::after {
+	content: '';
+	position: absolute;
+	bottom: -5px;
+	left: 50%;
+	transform: translateX(-50%);
+	border: 3px solid transparent;
+	border-top-color: inherit;
+}
+
+.bubble-badge--high {
+	background: var(--screen-blue);
+}
+
+.bubble-badge--medium {
+	background: var(--gold-tone);
+}
+
+.bubble-badge--low {
+	background: var(--panel-red);
+}
+
+.manga-page {
+	position: relative;
+	min-height: 100dvh;
+	padding: 1.5rem;
+	background: var(--cream-paper);
+	overflow-x: hidden;
+}
+
+.manga-content {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	gap: 1.5rem;
+	max-width: 1400px;
+	margin: 0 auto;
+}
+
+.manga-header {
+	background: var(--manga-navy);
+	border-radius: 0;
+	padding: 1rem 1.5rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.manga-header h1 {
+	margin: 0;
+	color: var(--cream-paper);
+	font-size: 1.5rem;
+}
+
+.manga-header a {
+	color: var(--cream-paper);
+	text-decoration: none;
+	font-family: 'DM Mono', monospace;
+	font-size: 0.85rem;
+}
+
+.manga-header a:hover {
+	color: var(--gold-tone);
+}
+
+.manga-title {
+	font-family: 'Shippori Mincho B1', serif;
+	font-size: clamp(1.5rem, 3vw, 2rem);
+	color: var(--ink-black);
+	margin: 0;
+}
+
+.manga-subtitle {
+	color: var(--ink-muted);
+	font-size: 0.95rem;
+	margin: 0.25rem 0 0;
+}
+
+.manga-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1rem;
+}
+
+.manga-card {
+	background: var(--panel-light);
+	border: 2px solid var(--border-line);
+	border-radius: 0;
+	padding: 1rem;
+	text-decoration: none;
+	color: var(--ink-black);
+	transition:
+		box-shadow 150ms ease,
+		transform 150ms ease;
+}
+
+.manga-card:hover {
+	box-shadow: 4px 4px 0 rgba(26, 26, 46, 0.12);
+	transform: translate(-1px, -1px);
+}
+
+.manga-card strong {
+	display: block;
+	font-family: 'Shippori Mincho B1', serif;
+	font-size: 1.15rem;
+	margin-bottom: 0.5rem;
+}
+
+.manga-card span {
+	display: block;
+	font-family: 'DM Mono', monospace;
+	font-size: 0.8rem;
+	color: var(--ink-muted);
+}
+
+.manga-card .lang-pair {
+	color: var(--screen-blue);
+	font-weight: 600;
+}
+
+.manga-form {
+	display: grid;
+	gap: 1rem;
+	max-width: 500px;
+}
+
+.manga-form label {
+	display: grid;
+	gap: 0.35rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.manga-form input,
+.manga-form select,
+.manga-form textarea {
+	border: 2px solid var(--border-line);
+	border-radius: 0;
+	background: var(--panel-light);
+	padding: 0.75rem;
+	font: inherit;
+	font-size: 1rem;
+}
+
+.manga-form input:focus,
+.manga-form select:focus,
+.manga-form textarea:focus {
+	outline: none;
+	border-color: var(--panel-red);
+}
+
+.manga-actions {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin-top: 1rem;
+}
+
+.btn-secondary {
+	background: var(--panel-light);
+	color: var(--ink-black);
+	border: 2px solid var(--border-line);
+	border-radius: 0;
+	padding: 10px 20px;
+	font-family: 'DM Mono', monospace;
+	font-size: 13px;
+	cursor: pointer;
+	transition: background 150ms ease;
+}
+
+.btn-secondary:hover {
+	background: var(--border-line);
+}
+
+.manga-thumbnail {
+	width: 100%;
+	aspect-ratio: 3 / 4;
+	object-fit: cover;
+	border-radius: 0;
+	border: 2px solid var(--border-line);
+}
+
+.status-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	font-family: 'DM Mono', monospace;
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	border-radius: 0;
+}
+
+.status-badge--pending {
+	background: var(--tone-gray);
+	color: var(--ink-black);
+}
+
+.status-badge--processing {
+	background: var(--screen-blue);
+	color: white;
+}
+
+.status-badge--translated {
+	background: var(--gold-tone);
+	color: var(--ink-black);
+}
+
+.status-badge--done {
+	background: #22c55e;
+	color: white;
 }

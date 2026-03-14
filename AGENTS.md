@@ -163,3 +163,11 @@ Svelte MCP Tools (use for Svelte/SvelteKit questions):
 2. `get-documentation` - Fetch relevant Svelte docs
 3. `svelte-autofixer` - Validate Svelte code before sending to user
 4. `playground-link` - Generate playground link (only if user requests, never for project files)
+
+## Additional Rule
+1. Always use skills relate with task to perform task (require both agent & sub-agent).
+2. Always commit after work done & check build + lint passed.
+3. Short plan for easy task and long plan for complex task & keep conplex task + todos in persistance in `.plans/` before implement.
+4. Always do follow best practices. 
+5. Always init agnet make understand with our project view `package.json` + `.docs`
+6. If you possible to sepreate to sub-agents you must do it (act-like your seinor software engineer + PM & sub-agents is your junior software engineers)
